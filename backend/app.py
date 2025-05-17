@@ -37,11 +37,13 @@ def index():
 from routes.events import events_bp
 from routes.bets import bets_bp
 from routes.auth import auth_bp
+from routes.simulation import simulation_bp
 
 # Registrar blueprints
 app.register_blueprint(events_bp, url_prefix='/events')
 app.register_blueprint(bets_bp, url_prefix='/bets')
 app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(simulation_bp, url_prefix='/simulation')
 
 # Ruta para listar deportes
 from models.sport import Sport

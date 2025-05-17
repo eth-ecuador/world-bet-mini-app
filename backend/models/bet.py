@@ -2,6 +2,7 @@ from models.database import get_db_connection
 import json
 import datetime
 import uuid
+import random
 
 class Bet:
     @staticmethod
@@ -127,4 +128,198 @@ class Bet:
             "bets": bets,
             "total_count": total_count,
             "page": page
+        }
+    
+    @staticmethod
+    def get_bet_by_id(bet_id):
+        """
+        Obtiene una apuesta por su ID.
+        
+        Args:
+            bet_id: ID de la apuesta
+        
+        Returns:
+            La apuesta o None si no se encuentra
+        """
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM bets WHERE id = ?", (bet_id,))
+        bet_row = cursor.fetchone()
+        
+        if not bet_row:
+            conn.close()
+            return None
+        
+        bet = dict(bet_row)
+        if bet['commission']:
+            bet['commission'] = json.loads(bet['commission'])
+        
+        conn.close()
+        return bet
+    
+    @staticmethod
+    def settle_bet(bet_id, outcome):
+        """
+        Liquida una apuesta marcándola como finalizada y estableciendo su resultado.
+        
+        Args:
+            bet_id: ID de la apuesta a liquidar
+            outcome: Resultado ('win', 'loss', 'void', 'half_win', 'half_loss')
+        
+        Returns:
+            La apuesta actualizada o None si no se encuentra
+        """
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Primero verificamos que la apuesta exista y no esté ya liquidada
+        cursor.execute("SELECT * FROM bets WHERE id = ?", (bet_id,))
+        bet_row = cursor.fetchone()
+        
+        if not bet_row:
+            conn.close()
+            return None
+        
+        bet = dict(bet_row)
+        
+        if bet['status'] == 'settled':
+            conn.close()
+            return bet  # Ya está liquidada
+        
+        # Actualizar la apuesta
+        cursor.execute("""
+        UPDATE bets 
+        SET status = 'settled', result = ?
+        WHERE id = ?
+        """, (outcome, bet_id))
+        
+        conn.commit()
+        
+        # Obtener la apuesta actualizada
+        cursor.execute("SELECT * FROM bets WHERE id = ?", (bet_id,))
+        updated_bet = dict(cursor.fetchone())
+        
+        if updated_bet['commission']:
+            updated_bet['commission'] = json.loads(updated_bet['commission'])
+        
+        conn.close()
+        return updated_bet
+    
+    @staticmethod
+    def simulate_results():
+        """
+        Simula resultados para apuestas pendientes con eventos que ya deberían haber terminado.
+        
+        Returns:
+            Lista de apuestas liquidadas
+        """
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Obtener apuestas pendientes cuyo tiempo estimado de resultado ya pasó
+        current_time = datetime.datetime.now().isoformat()
+        cursor.execute("""
+        SELECT * FROM bets 
+        WHERE status = 'placed' AND estimated_result_time < ?
+        """, (current_time,))
+        
+        pending_bets = [dict(row) for row in cursor.fetchall()]
+        settled_bets = []
+        
+        for bet in pending_bets:
+            # Simular resultado (50% probabilidad de ganar, 50% de perder)
+            outcome = 'win' if random.random() > 0.5 else 'loss'
+            
+            # Actualizar en la base de datos
+            cursor.execute("""
+            UPDATE bets 
+            SET status = 'settled', result = ?
+            WHERE id = ?
+            """, (outcome, bet['id']))
+            
+            bet['status'] = 'settled'
+            bet['result'] = outcome
+            if bet['commission']:
+                bet['commission'] = json.loads(bet['commission'])
+            
+            settled_bets.append(bet)
+        
+        conn.commit()
+        conn.close()
+        
+        return settled_bets
+    
+    @staticmethod
+    def calculate_user_profit(user_id):
+        """
+        Calcula el beneficio total de un usuario basado en sus apuestas liquidadas.
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Dict con estadísticas de beneficios
+        """
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+        SELECT * FROM bets 
+        WHERE user_id = ? AND status = 'settled'
+        """, (user_id,))
+        
+        settled_bets = [dict(row) for row in cursor.fetchall()]
+        
+        total_staked = 0
+        total_returned = 0
+        total_profit = 0
+        win_count = 0
+        loss_count = 0
+        
+        for bet in settled_bets:
+            total_staked += bet['stake_amount']
+            
+            if bet['result'] == 'win':
+                win_count += 1
+                total_returned += bet['potential_return']
+                total_profit += bet['potential_return'] - bet['stake_amount']
+            elif bet['result'] == 'loss':
+                loss_count += 1
+                # No hay retorno, la pérdida es el monto apostado
+                total_profit -= bet['stake_amount']
+            elif bet['result'] == 'void':
+                # En caso de anulación, se devuelve el monto apostado
+                total_returned += bet['stake_amount']
+            elif bet['result'] == 'half_win':
+                win_count += 0.5
+                loss_count += 0.5
+                # Gana la mitad, retorno = stake + (potential_return - stake) / 2
+                half_profit = (bet['potential_return'] - bet['stake_amount']) / 2
+                total_returned += bet['stake_amount'] + half_profit
+                total_profit += half_profit
+            elif bet['result'] == 'half_loss':
+                win_count += 0.5
+                loss_count += 0.5
+                # Pierde la mitad, retorno = stake / 2
+                total_returned += bet['stake_amount'] / 2
+                total_profit -= bet['stake_amount'] / 2
+        
+        conn.close()
+        
+        # Calcular estadísticas
+        total_bets = len(settled_bets)
+        win_rate = (win_count / total_bets * 100) if total_bets > 0 else 0
+        roi = (total_profit / total_staked * 100) if total_staked > 0 else 0
+        
+        return {
+            'user_id': user_id,
+            'total_bets': total_bets,
+            'win_count': win_count,
+            'loss_count': loss_count,
+            'win_rate': round(win_rate, 2),
+            'total_staked': round(total_staked, 2),
+            'total_returned': round(total_returned, 2),
+            'total_profit': round(total_profit, 2),
+            'roi': round(roi, 2)  # Return on Investment (%)
         }
