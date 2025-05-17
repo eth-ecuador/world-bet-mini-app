@@ -1,11 +1,20 @@
+# Modificar app.py
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from config import Config
+from models.database import init_db, populate_sample_data
+import os
 
 # Crear la aplicación Flask
 app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
+
+# Inicializar la base de datos si es necesario
+db_path = os.path.join('backend', 'database', 'worldbet.db')
+if not os.path.exists(db_path):
+    init_db()
+    populate_sample_data()
 
 # Ruta de inicio para verificación rápida
 @app.route('/', methods=['GET'])
@@ -35,17 +44,19 @@ app.register_blueprint(bets_bp, url_prefix='/bets')
 app.register_blueprint(auth_bp, url_prefix='/auth')
 
 # Ruta para listar deportes
-from utils.mock_data import get_sports
+from models.sport import Sport
 @app.route('/sports', methods=['GET'])
 def get_sports_list():
-    return jsonify({"sports": get_sports()})
+    sports = Sport.get_all()
+    return jsonify({"sports": sports})
 
 # Ruta para listar competiciones
-from utils.mock_data import get_competitions
+from models.competition import Competition
 @app.route('/competitions', methods=['GET'])
 def get_competitions_list():
     sport_id = request.args.get('sport_id')
-    return jsonify({"competitions": get_competitions(sport_id)})
+    competitions = Competition.get_all(sport_id)
+    return jsonify({"competitions": competitions})
 
 # Manejadores de errores
 @app.errorhandler(404)

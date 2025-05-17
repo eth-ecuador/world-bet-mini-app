@@ -1,13 +1,13 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import token_required
-from utils.mock_data import create_bet, get_user_bets
+from models.bet import Bet
 
 bets_bp = Blueprint('bets', __name__)
 
 @bets_bp.route('', methods=['POST'])
 @token_required
 def place_bet(current_user):
-    """Endpoint para crear una apuesta simulada."""
+    """Endpoint para crear una apuesta."""
     data = request.get_json()
     
     if not data:
@@ -23,7 +23,7 @@ def place_bet(current_user):
     currency = data['currency']
     use_ai_recommendation = data.get('use_ai_recommendation', False)
     
-    bet = create_bet(current_user, selection_id, stake_amount, currency, use_ai_recommendation)
+    bet = Bet.create(current_user, selection_id, stake_amount, currency, use_ai_recommendation)
     
     if not bet:
         return jsonify({'message': 'Invalid selection_id'}), 400
@@ -38,6 +38,6 @@ def get_bets(current_user):
     limit = int(request.args.get('limit', 10))
     page = int(request.args.get('page', 1))
     
-    bets = get_user_bets(current_user, status, limit, page)
+    bets = Bet.get_user_bets(current_user, status, limit, page)
     
     return jsonify(bets), 200

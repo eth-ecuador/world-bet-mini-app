@@ -2,15 +2,7 @@ import jwt
 import datetime
 from functools import wraps
 from flask import request, jsonify, current_app
-
-# Simulación de usuarios
-USERS = {
-    "user1": {
-        "id": "user1",
-        "username": "demouser",
-        "password": "password123"  # En un entorno real, esto estaría hasheado
-    }
-}
+from models.database import get_db_connection
 
 # Sesiones activas simuladas
 SESSIONS = {}
@@ -56,9 +48,16 @@ def token_required(f):
 
 def authenticate_user(username, password):
     """Autentica a un usuario con nombre de usuario y contraseña."""
-    for user_id, user in USERS.items():
-        if user['username'] == username and user['password'] == password:
-            return user_id
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id FROM users WHERE username = ? AND password = ?", (username, password))
+    user = cursor.fetchone()
+    
+    conn.close()
+    
+    if user:
+        return user['id']
     return None
 
 def create_session(user_id):

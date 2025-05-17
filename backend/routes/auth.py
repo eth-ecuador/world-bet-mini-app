@@ -34,6 +34,8 @@ def logout():
     
     token = auth_header.split(' ')[1]
     
+    # Aquí deberías invalidar el token en el sistema
+    from utils.auth import SESSIONS
     if token in SESSIONS:
         del SESSIONS[token]
     
