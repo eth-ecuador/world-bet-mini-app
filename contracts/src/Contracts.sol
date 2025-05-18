@@ -21,17 +21,20 @@ contract GGTToken is IERC20, Ownable {
     function mint(address to, uint256 amount) external onlyOwner {
         totalSupply += amount;
         balanceOf[to] += amount;
+        emit Transfer(address(0), to, amount);
     }
 
     function transfer(address to, uint256 amount) external returns (bool) {
         require(balanceOf[msg.sender] >= amount, "Insufficient balance");
         balanceOf[msg.sender] -= amount;
         balanceOf[to] += amount;
+        emit Transfer(msg.sender, to, amount);
         return true;
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
         return true;
     }
 
@@ -45,6 +48,7 @@ contract GGTToken is IERC20, Ownable {
         allowance[from][msg.sender] -= amount;
         balanceOf[from] -= amount;
         balanceOf[to] += amount;
+        emit Transfer(from, to, amount);
         return true;
     }
 }
@@ -320,11 +324,22 @@ contract Rewarder is Ownable, IRewarder {
     }
 
     function claim() external updateGlobal {
-        this.updateReward(msg.sender);
+        uint256 owed = (pool.stakeBalances(msg.sender, address(rewardToken)) *
+            (rewardPerTokenStored - userRewardPerTokenPaid[msg.sender])) / 1e18;
+        rewards[msg.sender] += owed;
+        userRewardPerTokenPaid[msg.sender] = rewardPerTokenStored;
+        
         uint256 reward = rewards[msg.sender];
         require(reward > 0, "No rewards");
+        
+        // Safety check to ensure we don't try to transfer more than available
+        uint256 rewarderBalance = rewardToken.balanceOf(address(this));
+        if (reward > rewarderBalance) {
+            reward = rewarderBalance;
+        }
+        
         rewards[msg.sender] = 0;
-        rewardToken.transfer(msg.sender, reward);
+        require(rewardToken.transfer(msg.sender, reward), "Transfer failed");
     }
 
     function setRewardRate(uint256 _rate) external onlyOwner updateGlobal {

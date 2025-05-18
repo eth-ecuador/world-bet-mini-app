@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "../lib/forge-std/src/Script.sol";
-import {Pool} from "../src/Pool.sol";
-import {GGTToken} from "../src/Pool.sol";
+import {GGTToken} from "../src/Contracts.sol";
+import {Pool} from "../src/Contracts.sol";
 
-contract HelloWorldScript is Script {
+contract ContractsScript is Script {
     Pool public pool;
     GGTToken public token;
 
