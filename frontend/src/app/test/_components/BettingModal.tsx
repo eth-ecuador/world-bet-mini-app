@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Event, MainMarket } from "@/services/events/events.type";
 import { OFF_RAMP_WALLET } from "@/config";
 import { Pay } from "@/components/Pay";
 import { Token } from "@worldcoin/mini-apps-ui-kit-react";
+import {
+  getTokenBalance,
+  isTokenBalanceError,
+} from "@/services/web3/wallet.service";
 
 interface BettingModalProps {
   isOpen: boolean;
@@ -67,11 +71,11 @@ export default function BettingModal({
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
+
     // Allow the user to type freely, but only permit numeric inputs and max one decimal point
     if (value === "" || /^(\d+)?\.?(\d{0,2})?$/.test(value)) {
       setInputValue(value);
-      
+
       // Only update the actual bet amount if it's a valid number
       const numericValue = parseFloat(value);
       if (!isNaN(numericValue)) {
