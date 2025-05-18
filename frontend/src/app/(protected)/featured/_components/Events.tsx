@@ -2,7 +2,6 @@ import { getEvents } from "@/services/events/events.service";
 import { GetEventsResponse } from "@/services/events/events.type";
 import React, { useEffect, useState } from "react";
 import EventCard from "./EventCard";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Events() {
   const [eventsData, setEventsData] = useState<GetEventsResponse | null>(null);
@@ -39,14 +38,10 @@ export default function Events() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] p-4">
-      <ScrollArea className="h-full w-full rounded-md">
-        <div className="space-y-6 max-w-4xl mx-auto px-4 pb-8">
-          {eventsData.events.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
-      </ScrollArea>
+    <div className="flex flex-col w-full p-4 gap-4 justify-center items-center">
+      {eventsData.events.map((event) => (
+        <EventCard key={event.id} event={event} />
+      ))}
     </div>
   );
 }

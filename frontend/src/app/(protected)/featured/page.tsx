@@ -81,7 +81,7 @@ export default function HomePage() {
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-auto bg-gray-950 p-4 space-y-2"
+        className="flex-1 overflow-auto bg-gray-950 p-4 space-y-2 w-full"
       >
         <div className="flex items-center justify-center">
           <h2 className="text-xl font-semibold text-white text-center">

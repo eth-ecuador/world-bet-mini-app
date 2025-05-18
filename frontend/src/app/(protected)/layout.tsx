@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { Header } from "@/components/PageLayout";
+import { Header } from "@/components/PageLayout/Header";
 import Footer from "@/components/PageLayout/Footer";
 import { Separator } from "@/components/ui/separator";
 import { redirect } from "next/navigation";

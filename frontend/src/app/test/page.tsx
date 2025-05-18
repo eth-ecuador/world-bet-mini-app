@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { format, addDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import Events from "./_components/Events";
+import Events from "@/app/(protected)/featured/_components/Events";
 
 interface Event {
   id: string;

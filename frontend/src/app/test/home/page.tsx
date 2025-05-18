@@ -1,5 +1,5 @@
 import React from "react";
-import Events from "../_components/Events";
+import Events from "@/app/(protected)/featured/_components/Events";
 
 export default function HomeTestPage() {
   return (
