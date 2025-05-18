@@ -1,5 +1,6 @@
 "use client";
 import { OFF_RAMP_WALLET } from "@/config";
+import { payToPool } from "@/lib/contracts";
 import { Button, LiveFeedback } from "@worldcoin/mini-apps-ui-kit-react";
 import { MiniKit, Tokens, tokenToDecimals } from "@worldcoin/minikit-js";
 import { useState } from "react";
@@ -42,7 +43,11 @@ export const Pay = ({
       description: "Pago",
     });
 
-    console.log(result.finalPayload);
+    const poolResult = await MiniKit.commandsAsync.sendTransaction({
+      transaction: payToPool(BigInt(amount)),
+    });
+
+    console.log(poolResult.finalPayload);
     if (result.finalPayload.status === "success") {
       setButtonState("success");
       // It's important to actually check the transaction result on-chain

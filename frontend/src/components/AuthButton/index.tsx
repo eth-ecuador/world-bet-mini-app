@@ -34,7 +34,6 @@ export const AuthButton = () => {
       if (isInstalled && !isPending) {
         setIsPending(true);
         try {
-          await walletAuth();
         } catch (error) {
           console.error('Auto wallet authentication error', error);
         } finally {
@@ -60,6 +59,11 @@ export const AuthButton = () => {
         disabled={isPending}
         size="lg"
         variant="primary"
+        style={{
+          backgroundColor: '#0047FF',
+          color: '#ffffff',
+          border: '1px solid #ffffff',
+        }}
       >
         Login with Wallet
       </Button>
