@@ -155,15 +155,15 @@ contract Pool is Ownable {
     }
 
     // **** User Pay for service (maintains balance & record) ****
-    function pay() external payable returns (bytes32) {
-        require(msg.value > 0, "Amount must be greater than 0");
+    function pay(uint256 amount) external returns (bytes32) {
+        require(amount > 0, "Amount must be greater than 0");
         bytes32 txId = _record(
             msg.sender,
-            msg.value,
+            amount,
             TransactionType.Pay,
             address(0)
         );
-        emit Pay(msg.sender, msg.value, txId);
+        emit Pay(msg.sender, amount, txId);
         return txId;
     }
 
