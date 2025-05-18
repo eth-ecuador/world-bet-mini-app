@@ -1,25 +1,24 @@
-# Documentación de la API de World Bet Mini App
+# Documentación de World Bet Mini App API
 
 ## Descripción General
 
-World Bet Mini App es una plataforma de apuestas deportivas simuladas con una API RESTful que proporciona endpoints para acceder a información sobre eventos deportivos y gestionar apuestas. Esta documentación describe cómo interactuar con la API para obtener datos y realizar operaciones.
+World Bet Mini App ofrece una API RESTful para gestionar apuestas deportivas simuladas. Esta documentación describe los endpoints disponibles, sus parámetros y respuestas, así como ejemplos de uso.
 
-## URL Base
+## URL Base de Producción
 
 ```
-http://localhost:5000
+https://world-bet-mini-app.onrender.com
 ```
 
 ## Autenticación
 
-Varios endpoints requieren autenticación mediante tokens JWT (JSON Web Tokens).
+La API utiliza autenticación basada en tokens JWT. Para los endpoints protegidos, necesitas incluir el token en el encabezado de la solicitud:
 
-Para los endpoints autenticados:
-1. Obtén un token mediante el endpoint `/auth/login` (usando método POST)
-2. Incluye el token en las cabeceras de la solicitud:
-   ```
-   Authorization: Bearer {token}
-   ```
+```
+Authorization: Bearer {token}
+```
+
+Para obtener un token, debes autenticarte con tu dirección Ethereum.
 
 ## Endpoints
 
@@ -29,11 +28,14 @@ Para los endpoints autenticados:
 ```
 GET /
 ```
+
 **Respuesta (200 OK)**:
 ```json
 {
   "message": "World Bet Mini App API",
   "status": "running",
+  "version": "1.0.0",
+  "environment": "production",
   "available_endpoints": [
     "/events/featured",
     "/events/{event_id}",
@@ -48,18 +50,17 @@ GET /
 
 ### Autenticación
 
-#### Iniciar Sesión
+#### Iniciar Sesión / Registro Automático
 ```
 POST /auth/login
 ```
 
-**⚠️ IMPORTANTE**: Este endpoint solo acepta solicitudes POST, no GET.
+La API permite autenticarse solo con una dirección Ethereum, creando automáticamente una cuenta si no existe.
 
-**Cuerpo de la solicitud (JSON)**:
+**Cuerpo de la solicitud**:
 ```json
 {
-  "username": "demouser",
-  "password": "password123"
+  "username": "0xYourEthereumAddress"
 }
 ```
 
@@ -67,15 +68,16 @@ POST /auth/login
 ```bash
 curl -X POST \
   -H "Content-Type: application/json" \
-  -d '{"username":"demouser","password":"password123"}' \
-  http://localhost:5000/auth/login
+  -d '{"username":"0xdF9D35B1981C8151fbdA6b32254F315DF3AFa7b8"}' \
+  https://world-bet-mini-app.onrender.com/auth/login
 ```
 
 **Respuesta (200 OK)**:
 ```json
 {
   "session_id": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user_id": "user1",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "username": "0xdF9D35B1981C8151fbdA6b32254F315DF3AFa7b8",
   "expires": "in 24 hours"
 }
 ```
@@ -84,8 +86,6 @@ curl -X POST \
 ```
 POST /auth/logout
 ```
-
-**⚠️ IMPORTANTE**: Este endpoint también solo acepta solicitudes POST.
 
 **Cabeceras**:
 ```
@@ -106,16 +106,16 @@ Authorization: Bearer {token}
 GET /events/featured
 ```
 
-**Parámetros de consulta**:
-- `sport_type` (opcional): Filtrar por tipo de deporte (ej. "football", "basketball")
-- `date_from` (opcional): Fecha mínima (YYYY-MM-DD)
-- `date_to` (opcional): Fecha máxima (YYYY-MM-DD)
-- `limit` (opcional): Número máximo de resultados (predeterminado: 10)
-- `page` (opcional): Número de página para paginación (predeterminado: 1)
+**Parámetros de consulta (opcionales)**:
+- `sport_type` - Filtrar por tipo de deporte (ej. "football", "basketball")
+- `date_from` - Fecha mínima en formato YYYY-MM-DD
+- `date_to` - Fecha máxima en formato YYYY-MM-DD
+- `limit` - Número máximo de resultados (predeterminado: 10)
+- `page` - Número de página para paginación (predeterminado: 1)
 
 **Ejemplo de cURL**:
 ```bash
-curl -X GET "http://localhost:5000/events/featured?sport_type=football&limit=5"
+curl -X GET "https://world-bet-mini-app.onrender.com/events/featured?sport_type=football&limit=5"
 ```
 
 **Respuesta (200 OK)**:
@@ -128,6 +128,21 @@ curl -X GET "http://localhost:5000/events/featured?sport_type=football&limit=5"
       "sport_type": "football",
       "competition": "La Liga",
       "start_time": "2025-05-18T16:00:00",
+      "end_time": "2025-05-18T18:00:00",
+      "teams": [
+        {
+          "id": "fc-barcelona-001",
+          "name": "Barcelona",
+          "logo_url": "/b.png",
+          "is_home": true
+        },
+        {
+          "id": "real-madrid-001",
+          "name": "Real Madrid",
+          "logo_url": "/r.png",
+          "is_home": false
+        }
+      ],
       "main_markets": [
         {
           "id": "38fe3c80-1651-4d44-8e01-761a44833701",
@@ -156,7 +171,7 @@ curl -X GET "http://localhost:5000/events/featured?sport_type=football&limit=5"
     },
     // Más eventos...
   ],
-  "total_count": 10,
+  "total_count": 42,
   "page": 1
 }
 ```
@@ -168,62 +183,108 @@ GET /events/{event_id}
 
 **Ejemplo de cURL**:
 ```bash
-curl -X GET "http://localhost:5000/events/4f4e8e74-977a-4855-a201-5ebf676f807f"
+curl -X GET "https://world-bet-mini-app.onrender.com/events/550e8400-e29b-41d4-a716-446655440000"
 ```
 
 **Respuesta (200 OK)**:
 ```json
 {
-  "id": "4f4e8e74-977a-4855-a201-5ebf676f807f",
-  "name": "Ferrari vs Red Bull Racing",
-  "sport_type": "motorsport",
-  "competition": "Formula 1",
-  "start_time": "2025-05-18T13:00:00",
-  "venue": "Circuit de Monaco, Monte Carlo",
-  "description": "Monaco Grand Prix",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Barcelona vs Real Madrid",
+  "sport_type": "football",
+  "competition": "La Liga",
+  "start_time": "2025-05-18T16:00:00",
+  "end_time": "2025-05-18T18:00:00",
+  "venue": "Camp Nou, Barcelona",
+  "description": "El Clásico - Round 25",
+  "teams": [
+    {
+      "id": "fc-barcelona-001",
+      "name": "Barcelona",
+      "logo_url": "/b.png",
+      "is_home": true
+    },
+    {
+      "id": "real-madrid-001",
+      "name": "Real Madrid",
+      "logo_url": "/r.png",
+      "is_home": false
+    }
+  ],
   "markets": [
     {
-      "id": "db96f8b1-6b11-44a1-a142-a790fa2e6f00",
-      "name": "Race Winner",
+      "id": "38fe3c80-1651-4d44-8e01-761a44833701",
+      "name": "Match Winner",
       "selections": [
         {
-          "id": "8c7f4994-36d6-4922-9ba6-d2fbeaaafd9f",
-          "name": "Leclerc (Ferrari)",
-          "odds": 2.5
+          "id": "9a4d5622-7044-4a9a-b853-4efecfc7a8d9",
+          "name": "Barcelona",
+          "odds": 2.1
         },
         {
-          "id": "423b66f4-8fff-4f64-9a5e-ba73a4d5d80d",
-          "name": "Verstappen (Red Bull)",
-          "odds": 1.8
+          "id": "23cd8b9a-eb69-414c-8171-9cacbad4db84",
+          "name": "Draw",
+          "odds": 3.5
         },
         {
-          "id": "4abcb650-2528-4ccc-9bfc-d1f35a2c3e7d",
-          "name": "Hamilton (Mercedes)",
-          "odds": 4.2
+          "id": "af1a2466-7bed-442c-a5f1-9cda1879fd23",
+          "name": "Real Madrid",
+          "odds": 3.2
+        }
+      ]
+    },
+    {
+      "id": "65fe21c9-32db-4a89-a01e-782712a45600",
+      "name": "Both Teams to Score",
+      "selections": [
+        {
+          "id": "71a34f2e-c89d-4f1a-8c1d-68a811e7f211",
+          "name": "Yes",
+          "odds": 1.7
+        },
+        {
+          "id": "9c31b48f-73c2-48c7-8bfa-e77e4a82c5f6",
+          "name": "No",
+          "odds": 2.1
         }
       ]
     }
   ],
   "status": "upcoming",
-  "image_url": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/c39372105002709.5f6f665700bd5.jpg",
+  "image_url": "https://www.shutterstock.com/image-photo/barcelona-vs-real-madrid-3d-260nw-2617044757.jpg",
   "stats": {
-    "team1_form": ["1", "3", "2", "1", "2"],
-    "team2_form": ["2", "1", "1", "2", "1"],
+    "team1_form": ["W", "W", "L", "D", "W"],
+    "team2_form": ["W", "W", "W", "D", "L"],
     "head_to_head": {
-      "total_matches": 23,
-      "team1_wins": 9,
-      "team2_wins": 14,
-      "draws": 0
+      "total_matches": 245,
+      "team1_wins": 96,
+      "team2_wins": 95,
+      "draws": 54
     }
   }
 }
 ```
 
+#### Eventos Por Deporte
+```
+GET /events/featured?sport_type={sport_type}
+```
+
+**Ejemplo de cURL**:
+```bash
+curl -X GET "https://world-bet-mini-app.onrender.com/events/featured?sport_type=basketball"
+```
+
 ### Deportes y Competiciones
 
-#### Listar Deportes
+#### Listar Deportes Disponibles
 ```
 GET /sports
+```
+
+**Ejemplo de cURL**:
+```bash
+curl -X GET "https://world-bet-mini-app.onrender.com/sports"
 ```
 
 **Respuesta (200 OK)**:
@@ -252,8 +313,13 @@ GET /sports
 GET /competitions
 ```
 
-**Parámetros de consulta**:
-- `sport_id` (opcional): Filtrar por ID de deporte
+**Parámetros de consulta (opcionales)**:
+- `sport_id` - Filtrar por ID de deporte
+
+**Ejemplo de cURL**:
+```bash
+curl -X GET "https://world-bet-mini-app.onrender.com/competitions?sport_id=550e8400-e29b-41d4-a716-446655440001"
+```
 
 **Respuesta (200 OK)**:
 ```json
@@ -285,10 +351,10 @@ Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
-**Cuerpo de la solicitud (JSON)**:
+**Cuerpo de la solicitud**:
 ```json
 {
-  "selection_id": "8c7f4994-36d6-4922-9ba6-d2fbeaaafd9f",
+  "selection_id": "9a4d5622-7044-4a9a-b853-4efecfc7a8d9",
   "stake_amount": 50,
   "currency": "WLD",
   "use_ai_recommendation": true
@@ -301,12 +367,12 @@ curl -X POST \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -H "Content-Type: application/json" \
   -d '{
-    "selection_id": "8c7f4994-36d6-4922-9ba6-d2fbeaaafd9f",
+    "selection_id": "9a4d5622-7044-4a9a-b853-4efecfc7a8d9",
     "stake_amount": 50,
     "currency": "WLD",
     "use_ai_recommendation": true
   }' \
-  http://localhost:5000/bets
+  https://world-bet-mini-app.onrender.com/bets
 ```
 
 **Respuesta (201 Created)**:
@@ -314,20 +380,20 @@ curl -X POST \
 {
   "id": "a2f44039-ca1a-4d9a-bb86-9292467a51f6",
   "status": "placed",
-  "selection_id": "8c7f4994-36d6-4922-9ba6-d2fbeaaafd9f",
-  "event_name": "Ferrari vs Red Bull Racing",
-  "selection_name": "Leclerc (Ferrari)",
-  "odds": 2.5,
-  "stake_amount": 50.0,
+  "selection_id": "9a4d5622-7044-4a9a-b853-4efecfc7a8d9",
+  "event_name": "Barcelona vs Real Madrid",
+  "selection_name": "Barcelona",
+  "odds": 2.1,
+  "stake_amount": 50,
   "currency": "WLD",
-  "potential_return": 125.0,
+  "potential_return": 105,
   "commission": {
     "standard": 1.5,
     "ai_premium": 0.5,
     "profit_percentage": 5
   },
   "created_at": "2025-05-17T13:39:22.116210",
-  "estimated_result_time": "2025-05-18T13:00:00",
+  "estimated_result_time": "2025-05-18T16:00:00",
   "result": null,
   "used_ai_recommendation": 1,
   "user_id": "user1"
@@ -344,16 +410,16 @@ GET /bets
 Authorization: Bearer {token}
 ```
 
-**Parámetros de consulta**:
-- `status` (opcional): Filtrar por estado (active, settled, all)
-- `limit` (opcional): Número máximo de resultados (predeterminado: 10)
-- `page` (opcional): Número de página para paginación (predeterminado: 1)
+**Parámetros de consulta (opcionales)**:
+- `status` - Filtrar por estado (active, settled, all)
+- `limit` - Número máximo de resultados (predeterminado: 10)
+- `page` - Número de página para paginación (predeterminado: 1)
 
 **Ejemplo de cURL**:
 ```bash
 curl -X GET \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/bets
+  "https://world-bet-mini-app.onrender.com/bets"
 ```
 
 **Respuesta (200 OK)**:
@@ -362,8 +428,8 @@ curl -X GET \
   "bets": [
     {
       "bet_id": "a2f44039-ca1a-4d9a-bb86-9292467a51f6",
-      "event_name": "Ferrari vs Red Bull Racing",
-      "selection_name": "Leclerc (Ferrari)",
+      "event_name": "Barcelona vs Real Madrid",
+      "selection_name": "Barcelona",
       "odds": 2.5,
       "stake_amount": 50.0,
       "currency": "WLD",
@@ -379,7 +445,7 @@ curl -X GET \
 }
 ```
 
-#### Obtener Detalles de Apuesta
+#### Obtener Detalles de Apuesta (requiere autenticación)
 ```
 GET /bets/{bet_id}
 ```
@@ -393,7 +459,7 @@ Authorization: Bearer {token}
 ```bash
 curl -X GET \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/bets/a2f44039-ca1a-4d9a-bb86-9292467a51f6
+  "https://world-bet-mini-app.onrender.com/bets/a2f44039-ca1a-4d9a-bb86-9292467a51f6"
 ```
 
 **Respuesta (200 OK)**:
@@ -401,27 +467,27 @@ curl -X GET \
 {
   "id": "a2f44039-ca1a-4d9a-bb86-9292467a51f6",
   "user_id": "user1",
-  "selection_id": "8c7f4994-36d6-4922-9ba6-d2fbeaaafd9f",
-  "event_name": "Ferrari vs Red Bull Racing",
-  "selection_name": "Leclerc (Ferrari)",
-  "odds": 2.5,
+  "selection_id": "9a4d5622-7044-4a9a-b853-4efecfc7a8d9",
+  "event_name": "Barcelona vs Real Madrid",
+  "selection_name": "Barcelona",
+  "odds": 2.1,
   "stake_amount": 50.0,
   "currency": "WLD",
-  "potential_return": 125.0,
+  "potential_return": 105.0,
   "commission": {
     "standard": 1.5,
     "ai_premium": 0.5,
     "profit_percentage": 5
   },
   "created_at": "2025-05-17T13:39:22.116210",
-  "estimated_result_time": "2025-05-18T13:00:00",
+  "estimated_result_time": "2025-05-18T16:00:00",
   "status": "placed",
   "result": null,
   "used_ai_recommendation": 1
 }
 ```
 
-#### Liquidar Apuesta Manualmente
+#### Liquidar Apuesta Manualmente (requiere autenticación)
 ```
 POST /bets/{bet_id}/settle
 ```
@@ -432,7 +498,7 @@ Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
-**Cuerpo de la solicitud (JSON)**:
+**Cuerpo de la solicitud**:
 ```json
 {
   "outcome": "win"  // Valores posibles: "win", "loss", "void", "half_win", "half_loss"
@@ -445,7 +511,7 @@ curl -X POST \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -H "Content-Type: application/json" \
   -d '{"outcome": "win"}' \
-  http://localhost:5000/bets/a2f44039-ca1a-4d9a-bb86-9292467a51f6/settle
+  "https://world-bet-mini-app.onrender.com/bets/a2f44039-ca1a-4d9a-bb86-9292467a51f6/settle"
 ```
 
 **Respuesta (200 OK)**:
@@ -458,7 +524,7 @@ curl -X POST \
 }
 ```
 
-#### Obtener Estadísticas de Apuestas
+#### Obtener Estadísticas de Apuestas (requiere autenticación)
 ```
 GET /bets/stats
 ```
@@ -472,7 +538,7 @@ Authorization: Bearer {token}
 ```bash
 curl -X GET \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/bets/stats
+  "https://world-bet-mini-app.onrender.com/bets/stats"
 ```
 
 **Respuesta (200 OK)**:
@@ -492,13 +558,9 @@ curl -X GET \
 }
 ```
 
-### Simulación (para pruebas y demostración)
-
-Los siguientes endpoints permiten simular el ciclo de vida de eventos y apuestas, pero están sujetos a las restricciones temporales basadas en las fechas de inicio programadas para los eventos.
-
-#### Actualizar Estados de Eventos
+#### Ver Apuestas Activas (requiere autenticación)
 ```
-POST /simulation/update-events
+GET /bets/active
 ```
 
 **Cabeceras**:
@@ -508,23 +570,17 @@ Authorization: Bearer {token}
 
 **Ejemplo de cURL**:
 ```bash
-curl -X POST \
+curl -X GET \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/simulation/update-events
+  "https://world-bet-mini-app.onrender.com/bets/active"
 ```
 
 **Respuesta (200 OK)**:
-```json
-{
-  "message": "Events status updated",
-  "live_updated": 0,
-  "completed_updated": 0
-}
-```
+Similar a GET /bets pero solo muestra apuestas con status="placed"
 
-#### Simular Resultados de Eventos
+#### Ver Historial de Apuestas (requiere autenticación)
 ```
-POST /simulation/simulate-results
+GET /bets/history
 ```
 
 **Cabeceras**:
@@ -534,43 +590,15 @@ Authorization: Bearer {token}
 
 **Ejemplo de cURL**:
 ```bash
-curl -X POST \
+curl -X GET \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/simulation/simulate-results
+  "https://world-bet-mini-app.onrender.com/bets/history"
 ```
 
 **Respuesta (200 OK)**:
-```json
-{
-  "message": "0 events simulated",
-  "simulated_count": 0
-}
-```
+Similar a GET /bets pero solo muestra apuestas con status="settled"
 
-#### Liquidar Apuestas Automáticamente
-```
-POST /simulation/settle-bets
-```
-
-**Cabeceras**:
-```
-Authorization: Bearer {token}
-```
-
-**Ejemplo de cURL**:
-```bash
-curl -X POST \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/simulation/settle-bets
-```
-
-**Respuesta (200 OK)**:
-```json
-{
-  "message": "0 bets settled",
-  "settled_count": 0
-}
-```
+### Simulación (para pruebas)
 
 #### Ejecutar Ciclo Completo de Simulación
 ```
@@ -586,7 +614,7 @@ Authorization: Bearer {token}
 ```bash
 curl -X POST \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  http://localhost:5000/simulation/run-simulation-cycle
+  "https://world-bet-mini-app.onrender.com/simulation/run-simulation-cycle"
 ```
 
 **Respuesta (200 OK)**:
@@ -602,52 +630,25 @@ curl -X POST \
 }
 ```
 
-## Notas sobre la Simulación
-
-Los endpoints de simulación funcionan según las fechas programadas de los eventos:
-
-1. `/simulation/update-events`: Actualiza a "live" los eventos cuya fecha de inicio ya pasó pero aún no han terminado, y a "completed" los eventos que ya deberían haber terminado.
-
-2. `/simulation/simulate-results`: Genera resultados aleatorios para eventos marcados como "completed".
-
-3. `/simulation/settle-bets`: Liquida automáticamente las apuestas basándose en los resultados simulados.
-
-Para ver todo el ciclo de vida de eventos y apuestas:
-- Esperar a que los eventos lleguen a sus fechas programadas, o
-- Usar el endpoint `/bets/{bet_id}/settle` para liquidar manualmente apuestas específicas
-
-## Códigos de Estado HTTP
-
-La API utiliza los siguientes códigos de estado HTTP:
-
-- `200 OK`: La solicitud se ha completado correctamente
-- `201 Created`: El recurso se ha creado correctamente (usado para crear apuestas)
-- `400 Bad Request`: La solicitud contiene datos inválidos o faltantes
-- `401 Unauthorized`: Autenticación requerida o credenciales inválidas
-- `403 Forbidden`: No tienes permisos para acceder a este recurso
-- `404 Not Found`: El recurso solicitado no existe
-- `405 Method Not Allowed`: El método HTTP no está permitido para el endpoint (por ejemplo, usar GET en lugar de POST)
-- `500 Internal Server Error`: Error interno del servidor
-
 ## Ejemplos con Axios (JavaScript)
 
-Para integrar la API en una aplicación frontend con Axios, puedes usar los siguientes ejemplos:
-
-### Configuración inicial
+### Configuración Inicial
 
 ```javascript
 import axios from 'axios';
 
+const API_URL = 'https://world-bet-mini-app.onrender.com';
+
 // Crear instancia de Axios con configuración base
 const api = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: API_URL,
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Interceptor para añadir automáticamente token de autenticación
+// Interceptor para añadir el token de autenticación
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -660,12 +661,11 @@ api.interceptors.request.use(config => {
 ### Autenticación
 
 ```javascript
-// Iniciar sesión
-const login = async (username, password) => {
+// Iniciar sesión con dirección Ethereum
+const login = async (ethAddress) => {
   try {
     const response = await api.post('/auth/login', {
-      username: username,
-      password: password
+      username: ethAddress
     });
     
     // Guardar token en localStorage
@@ -689,7 +689,7 @@ const logout = async () => {
 };
 ```
 
-### Obtener eventos deportivos
+### Obtener Eventos
 
 ```javascript
 // Listar eventos destacados
@@ -719,7 +719,7 @@ const getEventDetails = async (eventId) => {
 };
 ```
 
-### Gestionar apuestas
+### Gestión de Apuestas
 
 ```javascript
 // Crear una apuesta
@@ -773,100 +773,30 @@ const getBettingStats = async () => {
 };
 ```
 
-### Simulación (para desarrollo y pruebas)
+## Códigos de Estado HTTP
 
-```javascript
-// Ejecutar ciclo completo de simulación
-const runSimulationCycle = async () => {
-  try {
-    const response = await api.post('/simulation/run-simulation-cycle');
-    return response.data;
-  } catch (error) {
-    console.error('Error al ejecutar simulación:', error);
-    throw error;
-  }
-};
-```
+La API utiliza los siguientes códigos de estado HTTP:
 
-### Ejemplo de uso completo
+- `200 OK`: La solicitud se ha completado correctamente
+- `201 Created`: El recurso se ha creado correctamente (usado para crear apuestas)
+- `400 Bad Request`: La solicitud contiene datos inválidos o faltantes
+- `401 Unauthorized`: Autenticación requerida o credenciales inválidas
+- `403 Forbidden`: No tienes permisos para acceder a este recurso
+- `404 Not Found`: El recurso solicitado no existe
+- `405 Method Not Allowed`: El método HTTP no está permitido para el endpoint
+- `500 Internal Server Error`: Error interno del servidor
 
-```javascript
-// Flujo completo de una apuesta
-const completeBettingFlow = async () => {
-  try {
-    // 1. Login
-    await login('demouser', 'password123');
-    console.log('✅ Sesión iniciada');
-    
-    // 2. Obtener eventos
-    const eventsResponse = await getFeaturedEvents('football', 5);
-    const firstEvent = eventsResponse.events[0];
-    console.log(`✅ Eventos obtenidos: ${eventsResponse.events.length}`);
-    
-    // 3. Ver detalles del evento
-    const eventDetails = await getEventDetails(firstEvent.id);
-    console.log(`✅ Detalles del evento: ${eventDetails.name}`);
-    
-    // 4. Obtener selección para apostar
-    const selectionId = eventDetails.markets[0].selections[0].id;
-    
-    // 5. Realizar apuesta
-    const bet = await placeBet(selectionId, 50, 'WLD', true);
-    console.log(`✅ Apuesta realizada: ${bet.id}`);
-    
-    // 6. Liquidar apuesta manualmente
-    const settledBet = await settleBet(bet.id, 'win');
-    console.log(`✅ Apuesta liquidada: ${settledBet.status} - ${settledBet.result}`);
-    
-    // 7. Ver estadísticas
-    const stats = await getBettingStats();
-    console.log(`✅ Estadísticas: ${stats.betting_stats.win_count} ganadas, ROI: ${stats.betting_stats.roi}%`);
-    
-    return {
-      bet: settledBet,
-      stats: stats
-    };
-  } catch (error) {
-    console.error('Error en el flujo de apuestas:', error);
-    throw error;
-  }
-};
-```
+## Consideraciones Importantes
 
-## Flujo Completo de Pruebas
+1. **Autenticación**: Todas las solicitudes a endpoints protegidos deben incluir el token JWT en el encabezado.
+2. **Direcciones Ethereum**: La API acepta cualquier dirección Ethereum válida como nombre de usuario.
+3. **Entorno de Producción**: La API está desplegada en Render, y podría experimentar retrasos iniciales si el servicio ha estado inactivo.
+4. **Datos Simulados**: Los eventos y resultados son simulados, no reflejan eventos deportivos reales.
+5. **Simulación de Tiempo**: La simulación está basada en las fechas de los eventos, por lo que puedes necesitar usar las funciones de liquidación manual para probar el flujo completo.
 
-Para probar un ciclo completo de apuestas:
+## Soporte y Contacto
 
-1. Autenticarse y obtener un token JWT
-2. Explorar eventos disponibles
-3. Realizar una apuesta en un evento
-4. Liquidar manualmente la apuesta o esperar a la simulación automática
-5. Consultar estadísticas de apuestas
+Para soporte técnico o preguntas sobre la API, contacta a:
 
-### Ejemplo con cURL
-
-```bash
-# 1. Autenticarse
-curl -X POST -H "Content-Type: application/json" -d '{"username":"demouser","password":"password123"}' http://localhost:5000/auth/login
-
-# 2. Obtener eventos destacados
-curl -X GET http://localhost:5000/events/featured
-
-# 3. Ver detalles de un evento
-curl -X GET http://localhost:5000/events/4f4e8e74-977a-4855-a201-5ebf676f807f
-
-# 4. Realizar una apuesta (guarda el ID de la apuesta de la respuesta)
-curl -X POST -H "Authorization: Bearer {TOKEN}" -H "Content-Type: application/json" -d '{"selection_id":"8c7f4994-36d6-4922-9ba6-d2fbeaaafd9f","stake_amount":50,"currency":"WLD","use_ai_recommendation":true}' http://localhost:5000/bets
-
-# 5. Liquidar la apuesta manualmente
-curl -X POST -H "Authorization: Bearer {TOKEN}" -H "Content-Type: application/json" -d '{"outcome":"win"}' http://localhost:5000/bets/{BET_ID}/settle
-
-# 6. Ver estadísticas de apuestas
-curl -X GET -H "Authorization: Bearer {TOKEN}" http://localhost:5000/bets/stats
-```
-
-## Consideraciones para Desarrollo
-
-- La API incluye CORS habilitado, lo que permite solicitudes desde diferentes orígenes.
-- Los tokens JWT caducan después de 24 horas.
-- La simulación de eventos y resultados está basada en fechas, por lo que puede ser necesario ajustar las fechas o usar la liquidación manual para pruebas.
+- Equipo de Desarrollo: eth-ecuador@example.com
+- Repositorio del Proyecto: [GitHub](https://github.com/eth-ecuador/world-bet-mini-app)
