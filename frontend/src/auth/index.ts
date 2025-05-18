@@ -12,6 +12,7 @@ declare module 'next-auth' {
     walletAddress: string;
     username: string;
     profilePictureUrl: string;
+    externalApiToken?: string;
   }
 
   interface Session {
@@ -19,7 +20,35 @@ declare module 'next-auth' {
       walletAddress: string;
       username: string;
       profilePictureUrl: string;
+      externalApiToken?: string;
     } & DefaultSession['user'];
+  }
+}
+
+// Function to authenticate with the external API
+// This will run server-side, so we need a server-side API client
+async function authenticateWithExternalApi(address: string) {
+  try {
+    // In a server component, we can't use localStorage
+    // So we need to make a direct API call
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username: address }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to authenticate with external API:', await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    return data.session_id;
+  } catch (error) {
+    console.error('Error authenticating with external API:', error);
+    return null;
   }
 }
 
@@ -63,12 +92,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           console.log('Invalid final payload');
           return null;
         }
+        
+        // Authenticate with the external API to get a token
+        const externalApiToken = await authenticateWithExternalApi(finalPayload.address);
+        
         // Optionally, fetch the user info from your own database
         const userInfo = await MiniKit.getUserInfo(finalPayload.address);
 
         return {
           id: finalPayload.address,
           ...userInfo,
+          externalApiToken,
         };
       },
     }),
@@ -80,6 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.walletAddress = user.walletAddress;
         token.username = user.username;
         token.profilePictureUrl = user.profilePictureUrl;
+        token.externalApiToken = user.externalApiToken;
       }
 
       return token;
@@ -87,12 +122,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session: async ({ session, token }) => {
       if (token.userId) {
         session.user.id = token.userId as string;
-        session.user.walletAddress = token.address as string;
+        session.user.walletAddress = token.walletAddress as string;
         session.user.username = token.username as string;
         session.user.profilePictureUrl = token.profilePictureUrl as string;
+        session.user.externalApiToken = token.externalApiToken as string | undefined;
       }
 
       return session;
-    },
+    }
+  },
+  events: {
+    async signIn({ user }) {
+      // When the user signs in, the token is already obtained in authorize
+      console.log('User signed in:', user.id);
+    }
   },
 });

@@ -9,8 +9,8 @@ import { Pay } from "@/components/Pay";
 import { Token } from "@worldcoin/mini-apps-ui-kit-react";
 import WalletBalance from "@/components/WalletBalance";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
-import { useSession } from "next-auth/react";
 import { getUnoDeeplinkUrl } from "@/lib/swap";
+import { useAuthComplete } from "@/hooks/useAuthComplete";
 
 interface BettingModalProps {
   isOpen: boolean;
@@ -50,9 +50,9 @@ export default function BettingModal({
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [betAmount, setBetAmount] = useState(0); // Initialize to 0
   const [inputValue, setInputValue] = useState("0.00"); // Initialize to 0.00
-
-  const { data: session } = useSession();
-  const address = session?.user.id || "";
+  
+  const { walletAddress, externalApiAuthenticated } = useAuthComplete();
+  const address = walletAddress || "";
   const { balances } = useWalletBalance(address);
 
   // Calculate max bet amount (USDC balance minus 0.2)
@@ -63,7 +63,7 @@ export default function BettingModal({
   useEffect(() => {
     // Default amount we want to use (10.0)
     const defaultAmount = 10.0;
-
+    
     // If maxBetAmount is available and valid
     if (maxBetAmount > 0) {
       // Use the smaller of defaultAmount or maxBetAmount
@@ -154,19 +154,38 @@ export default function BettingModal({
     return (getValidBetAmount() * selectedOdd).toFixed(2);
   };
 
-  const handleBetSubmit = () => {
+  const handleBetSubmit = async () => {
     if (!selectedOption) {
       alert("Por favor selecciona una opción");
       return;
     }
 
-    // Here you would handle the bet submission logic
-    alert(
-      `¡Apuesta realizada! ${selectedOption} - $${getValidBetAmount().toFixed(
-        2
-      )}`
-    );
-    onClose();
+    try {
+      // We don't need to call login explicitly - our useAuthComplete hook handles that
+      // Just check if we're authenticated
+      if (!externalApiAuthenticated) {
+        alert("Por favor, inténtalo de nuevo. Error de autenticación.");
+        return;
+      }
+      
+      // Here you would handle the bet submission logic using the API
+      // Example:
+      // await apiClient.post('/bets', {
+      //   eventId: event.id,
+      //   selection: selectedOption,
+      //   amount: getValidBetAmount()
+      // });
+      
+      alert(
+        `¡Apuesta realizada! ${selectedOption} - $${getValidBetAmount().toFixed(
+          2
+        )}`
+      );
+      onClose();
+    } catch (error) {
+      console.error("Error submitting bet:", error);
+      alert("Error al realizar la apuesta. Inténtalo de nuevo.");
+    }
   };
 
   const handleGetUSDC = () => {

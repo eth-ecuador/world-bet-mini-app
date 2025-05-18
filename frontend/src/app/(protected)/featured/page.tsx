@@ -5,30 +5,20 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import Events from "./_components/Events";
 
-interface Event {
-  id: string;
-  date: Date;
-  title: string;
-  time: string;
-  location: string;
-  description: string;
-  image: string;
-}
-
 export default function HomePage() {
-  const events: Event[] = [
-    {
-      id: "1",
-      date: new Date(),
-      title: "Barcelona vs Real Madrid",
-      time: "10:00",
-      location: "Camp Nou",
-      description: "Barcelona vs Real Madrid",
-      image: "/b.png",
-    },
-  ];
+  // Parse the initial date
+  const parseInitialDate = () => {
+    try {
+      // You can set this to a specific date for testing
+      // For example: return parseISO("2025-05-18T16:00:00");
+      return new Date(); // Default to today
+    } catch (error) {
+      console.error("Error parsing initial date:", error);
+      return new Date(); // Fallback to today
+    }
+  };
 
-  const today = new Date();
+  const today = parseInitialDate();
   const [selectedDate, setSelectedDate] = useState(today);
   const [startDate] = useState(today);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,10 +26,11 @@ export default function HomePage() {
   // Generate 5 days starting from startDate
   const days = Array.from({ length: 5 }, (_, i) => addDays(startDate, i));
 
-  // Filter events for the selected date
-  const selectedEvents = events.filter((event) =>
-    isSameDay(event.date, selectedDate)
-  );
+  // Handle date selection with proper parsing
+  const handleDateSelect = (day: Date) => {
+    console.log("Selected day:", day);
+    setSelectedDate(day);
+  };
 
   // Scroll to top when date changes
   useEffect(() => {
@@ -49,39 +40,43 @@ export default function HomePage() {
   }, [selectedDate]);
 
   return (
-    <div className="sticky top-0 z-10 px-4 py-3 border-b border-gray-800 shadow-md container mx-auto">
-      <div className="flex justify-between">
-        {days.map((day) => (
-          <button
-            key={day.toString()}
-            onClick={() => setSelectedDate(day)}
-            className="flex flex-col items-center"
-          >
-            <span className="text-xs font-medium mb-1 text-gray-400">
-              {format(day, "EEE", { locale: es }).toUpperCase()}
-            </span>
-
-            {/* Date circle */}
-            <div
-              className={cn(
-                "flex h-14 w-14 flex-col items-center justify-center rounded-full text-lg font-medium transition-all",
-                isSameDay(day, selectedDate)
-                  ? "bg-[#9AE66E] text-gray-900 shadow-lg shadow-[#9AE66E]/20"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700",
-                isToday(day) &&
-                  !isSameDay(day, selectedDate) &&
-                  "ring-2 ring-[#9AE66E]/30"
-              )}
+    <div className="flex flex-col h-full">
+      {/* Date selector */}
+      <div className="sticky top-0 z-10 px-4 py-3 border-b border-gray-800 shadow-md container mx-auto">
+        <div className="flex justify-between">
+          {days.map((day) => (
+            <button
+              key={day.toString()}
+              onClick={() => handleDateSelect(day)}
+              className="flex flex-col items-center"
             >
-              {format(day, "d", { locale: es })}
-            </div>
-          </button>
-        ))}
+              <span className="text-xs font-medium mb-1 text-gray-400">
+                {format(day, "EEE", { locale: es }).toUpperCase()}
+              </span>
+
+              {/* Date circle */}
+              <div
+                className={cn(
+                  "flex h-14 w-14 flex-col items-center justify-center rounded-full text-lg font-medium transition-all",
+                  isSameDay(day, selectedDate)
+                    ? "bg-[#9AE66E] text-gray-900 shadow-lg shadow-[#9AE66E]/20"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700",
+                  isToday(day) &&
+                    !isSameDay(day, selectedDate) &&
+                    "ring-2 ring-[#9AE66E]/30"
+                )}
+              >
+                {format(day, "d", { locale: es })}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Content area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-auto bg-gray-950 p-4 space-y-2 w-full"
+        className="flex-1 overflow-auto bg-gray-950 p-4 space-y-4 w-full"
       >
         <div className="flex items-center justify-center">
           <h2 className="text-xl font-semibold text-white text-center">
@@ -91,20 +86,8 @@ export default function HomePage() {
           </h2>
         </div>
 
-        <Events />
-        {/*{selectedEvents.length > 0 ? (
-          <div className="space-y-3 pb-4">
-            {selectedEvents.map((event) => (
-              <EventCard key={event.id} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-40 mt-8 bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <div className="text-gray-400 text-center">
-              <p className="mb-2">No hay eventos programados para este día</p>
-            </div>
-          </div>
-        )}*/}
+        {/* Pass selectedDate to Events component */}
+        <Events selectedDate={selectedDate} />
       </div>
     </div>
   );

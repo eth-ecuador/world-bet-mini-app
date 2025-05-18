@@ -11,6 +11,14 @@ const apiClient = axios.create({
 // Request interceptor for auth tokens
 apiClient.interceptors.request.use(
   (config) => {
+    // First check for the authToken (from our auth service)
+    const authToken = localStorage.getItem('authToken');
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
+      return config;
+    }
+    
+    // Fall back to the token if authToken is not available
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -28,6 +36,8 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized (e.g., redirect to login)
       console.error('Unauthorized access');
+      // Could also clear tokens and redirect to login page
+      // localStorage.removeItem('authToken');
     }
     return Promise.reject(error);
   }
