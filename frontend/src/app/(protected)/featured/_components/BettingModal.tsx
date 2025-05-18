@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Event, MainMarket } from "@/services/events/events.type";
@@ -8,6 +8,9 @@ import { OFF_RAMP_WALLET } from "@/config";
 import { Pay } from "@/components/Pay";
 import { Token } from "@worldcoin/mini-apps-ui-kit-react";
 import WalletBalance from "@/components/WalletBalance";
+import { useWalletBalance } from "@/hooks/useWalletBalance";
+import { useSession } from "next-auth/react";
+import { getUnoDeeplinkUrl } from "@/lib/swap";
 
 interface BettingModalProps {
   isOpen: boolean;
@@ -45,15 +48,45 @@ export default function BettingModal({
   const paymentWallet =
     OFF_RAMP_WALLET || "0x1fb249bfa4ffB9fa98529692889d38359a57294D";
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [betAmount, setBetAmount] = useState(10.0); // Default bet amount
-  const [inputValue, setInputValue] = useState("10.00"); // Input field value
+  const [betAmount, setBetAmount] = useState(0); // Initialize to 0
+  const [inputValue, setInputValue] = useState("0.00"); // Initialize to 0.00
+
+  const { data: session } = useSession();
+  const address = session?.user.id || "";
+  const { balances } = useWalletBalance(address);
+
+  // Calculate max bet amount (USDC balance minus 0.2)
+  const maxBetAmount = balances.USDC ? parseFloat(balances.USDC) - 0.2 : 0;
+  const wldBalance = balances.WLD ? parseFloat(balances.WLD) - 0.2 : 0;
+
+  // Set initial bet amount based on the user's USDC balance
+  useEffect(() => {
+    // Default amount we want to use (10.0)
+    const defaultAmount = 10.0;
+
+    // If maxBetAmount is available and valid
+    if (maxBetAmount > 0) {
+      // Use the smaller of defaultAmount or maxBetAmount
+      const initialAmount = Math.min(defaultAmount, maxBetAmount);
+      setBetAmount(initialAmount);
+      setInputValue(initialAmount.toFixed(2));
+    } else if (maxBetAmount <= 0 && balances.USDC !== null) {
+      // If there's a balance but it's too low, set to 0
+      setBetAmount(0);
+      setInputValue("0.00");
+    }
+  }, [maxBetAmount, balances.USDC]);
 
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
   };
 
   const incrementAmount = () => {
-    const newAmount = parseFloat((betAmount + 1).toFixed(2));
+    // Ensure we don't exceed max bet amount
+    const newAmount = Math.min(
+      parseFloat((betAmount + 1).toFixed(2)),
+      Math.max(0, maxBetAmount)
+    );
     setBetAmount(newAmount);
     setInputValue(newAmount.toFixed(2));
   };
@@ -76,7 +109,12 @@ export default function BettingModal({
       // Only update the actual bet amount if it's a valid number
       const numericValue = parseFloat(value);
       if (!isNaN(numericValue)) {
-        setBetAmount(numericValue);
+        // Ensure the bet amount doesn't exceed the max bet amount
+        const limitedValue = Math.min(numericValue, Math.max(0, maxBetAmount));
+        setBetAmount(limitedValue);
+        if (limitedValue !== numericValue) {
+          setInputValue(limitedValue.toFixed(2));
+        }
       } else if (value === "" || value === ".") {
         setBetAmount(0);
       }
@@ -129,6 +167,14 @@ export default function BettingModal({
       )}`
     );
     onClose();
+  };
+
+  const handleGetUSDC = () => {
+    const deeplink = getUnoDeeplinkUrl({
+      toToken: "USDC",
+      amount: wldBalance > 0 ? wldBalance.toString() : undefined,
+    });
+    window.location.href = deeplink;
   };
 
   if (!isOpen) return null;
@@ -307,42 +353,58 @@ export default function BettingModal({
             </div>
 
             <div className="mb-6">
-              <p className="text-gray-700 mb-3 font-medium">Monto:</p>
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-gray-700 font-medium">Monto:</p>
+                {maxBetAmount > 0 && (
+                  <p className="text-xs text-gray-500">
+                    Max: {maxBetAmount.toFixed(2)} USDC
+                  </p>
+                )}
+              </div>
 
-              <div className="relative">
-                <div
-                  className="flex items-center rounded-xl overflow-hidden border focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent shadow-sm"
-                  style={{ borderColor: "#e5e7eb" }}
-                >
-                  <button
-                    onClick={decrementAmount}
-                    className="p-3 bg-gray-50 text-gray-700 font-bold text-xl border-r hover:bg-gray-100 transition-colors flex items-center justify-center w-12"
+              <div className="flex flex-col gap-4">
+                <div className="relative">
+                  <div
+                    className="flex items-center rounded-xl overflow-hidden border focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent shadow-sm"
                     style={{ borderColor: "#e5e7eb" }}
                   >
-                    −
-                  </button>
-                  <div className="flex items-center justify-center flex-1">
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={inputValue}
-                      onChange={handleAmountChange}
-                      onBlur={handleInputBlur}
-                      onFocus={handleInputFocus}
-                      className="w-full p-3 text-center font-medium text-lg border-none focus:outline-none"
-                    />
-                    <div className="mr-3">
-                      <Token value="USDC" size={24} />
+                    <button
+                      onClick={decrementAmount}
+                      className="p-3 bg-gray-50 text-gray-700 font-bold text-xl border-r hover:bg-gray-100 transition-colors flex items-center justify-center w-12"
+                      style={{ borderColor: "#e5e7eb" }}
+                    >
+                      −
+                    </button>
+                    <div className="flex items-center justify-center flex-1">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={inputValue}
+                        onChange={handleAmountChange}
+                        onBlur={handleInputBlur}
+                        onFocus={handleInputFocus}
+                        className="w-full p-3 text-center font-medium text-lg border-none focus:outline-none"
+                      />
+                      <div className="mr-3">
+                        <Token value="USDC" size={24} />
+                      </div>
                     </div>
+                    <button
+                      onClick={incrementAmount}
+                      className="p-3 bg-gray-50 text-gray-700 font-bold text-xl border hover:bg-gray-100 transition-colors flex items-center justify-center w-12"
+                      style={{ borderColor: "#e5e7eb" }}
+                    >
+                      +
+                    </button>
                   </div>
-                  <button
-                    onClick={incrementAmount}
-                    className="p-3 bg-gray-50 text-gray-700 font-bold text-xl border hover:bg-gray-100 transition-colors flex items-center justify-center w-12"
-                    style={{ borderColor: "#e5e7eb" }}
-                  >
-                    +
-                  </button>
                 </div>
+
+                <button
+                  onClick={handleGetUSDC}
+                  className="mt-3 w-full py-2 rounded-xl font-medium text-sm bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors border border-blue-200"
+                >
+                  Obtener USDC
+                </button>
               </div>
             </div>
 
@@ -381,14 +443,23 @@ export default function BettingModal({
 
         {selectedOption ? (
           <div className="p-5 border-t sticky bottom-0 bg-white">
-            <Pay address={paymentWallet} amount={getValidBetAmount()} />
+            {maxBetAmount <= 0 ? (
+              <button
+                onClick={handleGetUSDC}
+                className="w-full p-3 rounded-xl font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+              >
+                Primero obtén USDC
+              </button>
+            ) : (
+              <Pay address={paymentWallet} amount={getValidBetAmount()} />
+            )}
           </div>
         ) : (
           <div className="p-5 border-t sticky bottom-0 bg-white">
             <button
               onClick={handleBetSubmit}
               disabled={!selectedOption}
-              className={`w-full py-3 rounded-xl font-medium transition-all ${
+              className={`w-full p-3 rounded-xl font-medium transition-all ${
                 selectedOption
                   ? "text-black hover:shadow-md active:transform active:scale-95"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
