@@ -1,26 +1,31 @@
 from flask import Blueprint, request, jsonify
-from utils.auth import authenticate_user, create_session
+from utils.auth import get_or_create_user, create_session
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """Endpoint para iniciar sesión de usuario."""
+    """
+    Endpoint para iniciar sesión o registrar un usuario automáticamente.
+    Solo requiere el nombre de usuario (dirección Ethereum).
+    """
     data = request.get_json()
     
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({'message': 'Missing username or password'}), 400
+    if not data or not data.get('username'):
+        return jsonify({'message': 'Missing username'}), 400
     
-    user_id = authenticate_user(data['username'], data['password'])
+    username = data['username']
     
-    if not user_id:
-        return jsonify({'message': 'Invalid credentials'}), 401
+    # Obtener o crear el usuario
+    user_id = get_or_create_user(username)
     
+    # Crear sesión
     token = create_session(user_id)
     
     return jsonify({
         'session_id': token,
         'user_id': user_id,
+        'username': username,
         'expires': 'in 24 hours'
     }), 200
 
@@ -34,8 +39,6 @@ def logout():
     
     token = auth_header.split(' ')[1]
     
-    # Aquí deberías invalidar el token en el sistema
-    from utils.auth import SESSIONS
     if token in SESSIONS:
         del SESSIONS[token]
     

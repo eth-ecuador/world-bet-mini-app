@@ -1,5 +1,6 @@
 import jwt
 import datetime
+import uuid
 from functools import wraps
 from flask import request, jsonify, current_app
 from models.database import get_db_connection
@@ -46,19 +47,37 @@ def token_required(f):
     
     return decorated
 
-def authenticate_user(username, password):
-    """Autentica a un usuario con nombre de usuario y contraseña."""
+def get_or_create_user(username):
+    """
+    Obtiene un usuario existente o crea uno nuevo si no existe.
+    
+    Args:
+        username: Dirección Ethereum u otro identificador de usuario
+        
+    Returns:
+        ID del usuario (existente o recién creado)
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id FROM users WHERE username = ? AND password = ?", (username, password))
+    # Buscar el usuario
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
     
-    conn.close()
-    
     if user:
-        return user['id']
-    return None
+        # Usuario encontrado, devolver su ID
+        user_id = user['id']
+    else:
+        # Usuario no encontrado, crear uno nuevo
+        user_id = str(uuid.uuid4())  # Generar ID único
+        cursor.execute(
+            "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
+            (user_id, username, "")  # Contraseña vacía ya que no la usamos
+        )
+        conn.commit()
+    
+    conn.close()
+    return user_id
 
 def create_session(user_id):
     """Crea una sesión para el usuario autenticado."""
