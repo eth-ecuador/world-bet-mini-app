@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
-import { Navigation } from "@/components/Navigation";
-import { Page } from "@/components/PageLayout";
+import { Header } from "@/components/PageLayout";
+import Footer from "@/components/PageLayout/Footer";
+import { Separator } from "@/components/ui/separator";
 import { redirect } from "next/navigation";
 
 export default async function ProtectedLayout({
@@ -12,15 +13,15 @@ export default async function ProtectedLayout({
 
   // If the user is not authenticated, redirect to the root page
   if (!session) {
-    redirect('/');
+    redirect("/");
   }
 
   return (
-    <Page>
-      {children}
-      <Page.Footer className="px-0 fixed bottom-0 w-full bg-white">
-        <Navigation />
-      </Page.Footer>
-    </Page>
+    <div className="flex flex-col min-h-screen bg-gray-950">
+      <Header />
+      <main className="container mx-auto pb-8">{children}</main>
+      <Separator className="pt-0" />
+      <Footer />
+    </div>
   );
 }

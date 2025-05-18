@@ -2,6 +2,7 @@
 
 import { TabItem, Tabs } from "@worldcoin/mini-apps-ui-kit-react";
 import { Bank, Home, User } from "iconoir-react";
+import Link from "next/link";
 import { useState } from "react";
 
 /**
@@ -17,7 +18,9 @@ export const Navigation = () => {
   return (
     <Tabs value={value} onValueChange={setValue} className="">
       <TabItem value="home" icon={<Home />} label="Home" />
-      <TabItem value="wallet" icon={<Bank />} label="Wallet" />
+      <Link href="/featured">
+        <TabItem value="featured" icon={<Bank />} label="Featured" />
+      </Link>
       <TabItem value="profile" icon={<User />} label="Profile" />
     </Tabs>
   );

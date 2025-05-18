@@ -75,12 +75,12 @@ export default function EventCard({ event }: EventCardProps) {
         ? odds.draw
         : odds.away;
 
-    return selectedOdd.toFixed(2);
+    return (selectedOdd).toFixed(2);
   };
 
   return (
-    <div className="max-w-md mx-auto rounded-xl shadow-md overflow-hidden bg-white hover:shadow-lg transition-shadow">
-      <div className="px-6 py-4 pb-2 border-b">
+    <div className="max-w-md mx-auto rounded-xl shadow-md overflow-hidden bg-white">
+      <div className="px-6 py-4 pb-2">
         <h2 className="text-lg font-semibold text-center">
           {homeTeam.name} vs {awayTeam.name}
         </h2>
@@ -93,15 +93,15 @@ export default function EventCard({ event }: EventCardProps) {
           • {event.competition || "Unknown"}
         </p>
       </div>
-      <div className="px-6 py-4 flex flex-col gap-4">
+      <div className="px-6 pb-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 relative mb-2 rounded-full bg-gray-50 p-2 border overflow-hidden">
+            <div className="w-16 h-16 relative mb-2">
               <Image
                 src={homeTeam.logo_url || "/placeholder.svg"}
                 alt={homeTeam.name}
                 fill
-                className="object-contain p-1"
+                className="object-contain"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.onerror = null;
@@ -109,17 +109,12 @@ export default function EventCard({ event }: EventCardProps) {
                 }}
               />
             </div>
-            <span className="text-sm font-medium max-w-24 truncate">
-              {homeTeam.name}
-            </span>
+            <span className="text-sm font-medium">{homeTeam.name}</span>
           </div>
 
           <button
-            className="rounded-full px-6 py-2 text-sm font-medium transition-all text-black hover:shadow-md hover:opacity-90 active:opacity-100 active:transform active:scale-95 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: hasMarkets ? "#9AE66E" : "#f3f4f6",
-              color: hasMarkets ? "black" : "#4B5563",
-            }}
+            style={{ backgroundColor: "#9AE66E", color: "black" }}
+            className="rounded-full px-6 py-2 text-sm font-medium transition-colors hover:opacity-90"
             onClick={() => setShowModal(true)}
             disabled={!hasMarkets}
           >
@@ -127,12 +122,12 @@ export default function EventCard({ event }: EventCardProps) {
           </button>
 
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 relative mb-2 rounded-full bg-gray-50 p-2 border overflow-hidden">
+            <div className="w-16 h-16 relative mb-2">
               <Image
                 src={awayTeam.logo_url || "/placeholder.svg"}
                 alt={awayTeam.name}
                 fill
-                className="object-contain p-1"
+                className="object-contain"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.onerror = null;
@@ -140,52 +135,56 @@ export default function EventCard({ event }: EventCardProps) {
                 }}
               />
             </div>
-            <span className="text-sm font-medium max-w-24 truncate">
-              {awayTeam.name}
-            </span>
+            <span className="text-sm font-medium">{awayTeam.name}</span>
           </div>
         </div>
 
         {hasMarkets ? (
-          <div className="rounded-lg p-4 w-full bg-gray-50 border">
-            <div className="flex items-center justify-between gap-3">
+          <div className="rounded-lg p-4 w-full bg-gray-100">
+            <div className="flex items-center justify-between gap-2">
               <button
-                className={`rounded-lg p-3 w-full text-center font-medium transition-all ${
-                  selectedOption === "home"
-                    ? "text-black shadow-md transform scale-105"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
-                }`}
                 style={{
-                  backgroundColor: selectedOption === "home" ? "#9AE66E" : "",
+                  backgroundColor:
+                    selectedOption === "home" ? "#9AE66E" : "white",
+                  color: selectedOption === "home" ? "black" : "#4B5563",
+                  boxShadow:
+                    selectedOption === "home"
+                      ? "0 2px 4px rgba(0,0,0,0.1)"
+                      : "none",
                 }}
+                className="rounded-lg p-3 w-full text-center font-medium transition-colors"
                 onClick={() => handleOptionSelect("home")}
               >
                 {odds.home.toFixed(2)}
               </button>
 
               <button
-                className={`rounded-lg p-3 w-full text-center font-medium transition-all ${
-                  selectedOption === "draw"
-                    ? "text-black shadow-md transform scale-105"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
-                }`}
                 style={{
-                  backgroundColor: selectedOption === "draw" ? "#9AE66E" : "",
+                  backgroundColor:
+                    selectedOption === "draw" ? "#9AE66E" : "white",
+                  color: selectedOption === "draw" ? "black" : "#4B5563",
+                  boxShadow:
+                    selectedOption === "draw"
+                      ? "0 2px 4px rgba(0,0,0,0.1)"
+                      : "none",
                 }}
+                className="rounded-lg p-3 w-full text-center font-medium transition-colors"
                 onClick={() => handleOptionSelect("draw")}
               >
                 X
               </button>
 
               <button
-                className={`rounded-lg p-3 w-full text-center font-medium transition-all ${
-                  selectedOption === "away"
-                    ? "text-black shadow-md transform scale-105"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
-                }`}
                 style={{
-                  backgroundColor: selectedOption === "away" ? "#9AE66E" : "",
+                  backgroundColor:
+                    selectedOption === "away" ? "#9AE66E" : "white",
+                  color: selectedOption === "away" ? "black" : "#4B5563",
+                  boxShadow:
+                    selectedOption === "away"
+                      ? "0 2px 4px rgba(0,0,0,0.1)"
+                      : "none",
                 }}
+                className="rounded-lg p-3 w-full text-center font-medium transition-colors"
                 onClick={() => handleOptionSelect("away")}
               >
                 {odds.away.toFixed(2)}
@@ -193,9 +192,9 @@ export default function EventCard({ event }: EventCardProps) {
             </div>
 
             {selectedOption && (
-              <div className="mt-3 text-sm flex justify-between items-center">
-                <span className="text-gray-500">Ganancia potencial:</span>
-                <span className="text-emerald-600 font-bold">
+              <div className="mt-3 text-sm text-center">
+                <span className="text-gray-500">Potential win: </span>
+                <span style={{ color: "#9AE66E" }} className="font-medium">
                   ${getPotentialWin()}
                 </span>
               </div>

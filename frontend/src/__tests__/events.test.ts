@@ -1,6 +1,6 @@
 import { eventsService } from '../services/events';
 import { API_CONFIG } from '../config/api';
-import { API_MOCKS } from '../config/mocks';
+import { API_MOCKS } from '../lib/mocks';
 
 describe('Events Service', () => {
   // Store original env

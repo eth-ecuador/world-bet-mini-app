@@ -6,6 +6,9 @@
   "license": "MIT",
   "private": true,
   "type": "module",
+  "tailwindcss": {
+    "config": "tailwind.config.mjs"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -45,6 +48,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.16",
     "eruda": "^3.4.1",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
