@@ -1,6 +1,6 @@
 'use client';
 
-import TestContractABI from '@/abi/TestContract.json';
+import TestContractABI from '@/contracts/Pool.json';
 import { Button, LiveFeedback } from '@worldcoin/mini-apps-ui-kit-react';
 import { MiniKit } from '@worldcoin/minikit-js';
 import { useWaitForTransactionReceipt } from '@worldcoin/minikit-react';
@@ -78,7 +78,7 @@ export const Transaction = () => {
         transaction: [
           {
             address: myContractToken,
-            abi: TestContractABI,
+            abi: TestContractABI.abi,
             functionName: 'mintToken',
             args: [],
           },
@@ -135,7 +135,7 @@ export const Transaction = () => {
         transaction: [
           {
             address: myContractToken,
-            abi: TestContractABI,
+            abi: TestContractABI.abi,
             functionName: 'signatureTransfer',
             args: [
               [

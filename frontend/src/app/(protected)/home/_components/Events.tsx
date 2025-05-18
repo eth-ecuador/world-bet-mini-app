@@ -1,3 +1,5 @@
+"use client";
+
 import { getEvents, EventsFilterParams } from "@/services/events/events.service";
 import { GetEventsResponse } from "@/services/events/events.type";
 import React, { useEffect, useState } from "react";
