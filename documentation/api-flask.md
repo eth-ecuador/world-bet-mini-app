@@ -167,7 +167,8 @@ curl -X GET "https://world-bet-mini-app.onrender.com/events/featured?sport_type=
         }
       ],
       "status": "upcoming",
-      "image_url": "https://www.shutterstock.com/image-photo/barcelona-vs-real-madrid-3d-260nw-2617044757.jpg"
+      "image_url": "https://www.shutterstock.com/image-photo/barcelona-vs-real-madrid-3d-260nw-2617044757.jpg",
+      "highlights_url": "https://www.youtube.com/watch?v=0c8RD3fd9hc"
     },
     // Más eventos...
   ],
@@ -718,6 +719,92 @@ const getEventDetails = async (eventId) => {
     throw error;
   }
 };
+
+// Obtener enlace de highlights y abrir en reproductor
+const watchHighlights = async (eventId) => {
+  try {
+    const eventDetails = await getEventDetails(eventId);
+    
+    if (eventDetails.highlights_url) {
+      // Opción 1: Abrir en una nueva ventana del navegador
+      window.open(eventDetails.highlights_url, '_blank');
+      
+      // Opción 2: Devolver la URL para incrustar en un iframe
+      return {
+        hasHighlights: true,
+        url: eventDetails.highlights_url,
+        embedUrl: eventDetails.highlights_url.replace('watch?v=', 'embed/')
+      };
+    } else {
+      return {
+        hasHighlights: false,
+        message: "No hay highlights disponibles para este evento"
+      };
+    }
+  } catch (error) {
+    console.error(`Error al obtener highlights del evento ${eventId}:`, error);
+    throw error;
+  }
+};
+
+// Componente de ejemplo para mostrar highlights en React
+const EventHighlights = ({ eventId }) => {
+  const [highlightsData, setHighlightsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    const loadHighlights = async () => {
+      try {
+        setLoading(true);
+        const data = await getEventDetails(eventId);
+        setHighlightsData(data);
+        setLoading(false);
+      } catch (err) {
+        setError("Error al cargar los highlights");
+        setLoading(false);
+      }
+    };
+    
+    loadHighlights();
+  }, [eventId]);
+  
+  if (loading) return <div>Cargando highlights...</div>;
+  if (error) return <div>{error}</div>;
+  if (!highlightsData) return <div>No se encontró el evento</div>;
+  
+  // Convertir URL de YouTube a URL de embed
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch?v=')) {
+      return url.replace('watch?v=', 'embed/');
+    }
+    return url;
+  };
+  
+  const embedUrl = getEmbedUrl(highlightsData.highlights_url);
+  
+  return (
+    <div className="event-highlights">
+      <h2>Highlights: {highlightsData.name}</h2>
+      {embedUrl ? (
+        <div className="video-container">
+          <iframe 
+            width="560" 
+            height="315" 
+            src={embedUrl} 
+            title={`Highlights de ${highlightsData.name}`}
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+          ></iframe>
+        </div>
+      ) : (
+        <p>No hay highlights disponibles para este evento</p>
+      )}
+    </div>
+  );
+};
 ```
 
 ### Gestión de Apuestas
@@ -794,10 +881,11 @@ La API utiliza los siguientes códigos de estado HTTP:
 3. **Entorno de Producción**: La API está desplegada en Render, y podría experimentar retrasos iniciales si el servicio ha estado inactivo.
 4. **Datos Simulados**: Los eventos y resultados son simulados, no reflejan eventos deportivos reales.
 5. **Simulación de Tiempo**: La simulación está basada en las fechas de los eventos, por lo que puedes necesitar usar las funciones de liquidación manual para probar el flujo completo.
+6. **Videos de Highlights**: La API ahora incluye enlaces a videos de highlights para eventos completados, accesibles a través del campo `highlights_url`.
 
 ## Soporte y Contacto
 
 Para soporte técnico o preguntas sobre la API, contacta a:
 
-- Equipo de Desarrollo: eth-ecuador@example.com
+- Equipo de Desarrollo: 
 - Repositorio del Proyecto: [GitHub](https://github.com/eth-ecuador/world-bet-mini-app)

@@ -21,6 +21,7 @@ Este documento describe la estructura de la base de datos SQLite utilizada en el
                                                     | status         |
                                                     | image_url      |
                                                     | stats (JSON)   |
+                                                    | highlights_url |
                                                     +----------------+
                                                            
 +----------------+       +------------------+
@@ -89,7 +90,7 @@ Almacena los eventos deportivos disponibles para apostar.
 | status             | TEXT    | Estado del evento (upcoming, live, completed) |
 | image_url          | TEXT    | URL de la imagen del evento                   |
 | stats              | TEXT    | Estadísticas del evento en formato JSON       |
-| highlights_url     | TEXT    | URL de YouTube con highlights del partido     |
+| highlights_url     | TEXT    | URL de video con highlights del evento        |
 
 #### Estructura del campo `markets` (JSON)
 
@@ -204,6 +205,21 @@ La base de datos se inicializa automáticamente con datos de muestra cuando se e
 - 10 eventos deportivos con equipos y fechas de inicio/fin
 - Datos de usuario demo se crean automáticamente cuando alguien inicia sesión
 
+## Migraciones de Base de Datos
+
+El sistema implementa un proceso de migración para manejar cambios en el esquema de la base de datos:
+
+1. **Migración highlights_url**: Agrega una columna para almacenar URLs de videos con highlights de eventos deportivos.
+   - Script: `scripts/add_highlights.py`
+   - Esta migración se ejecuta automáticamente al iniciar la aplicación si la base de datos ya existe
+   - También incluye datos de ejemplo con enlaces a videos de YouTube para eventos existentes
+
+Para verificar si una migración se ha aplicado, puede usar:
+
+```sql
+PRAGMA table_info(events)
+```
+
 ## Autenticación Simplificada
 
 La versión más reciente de la aplicación utiliza un sistema de autenticación simplificado:
@@ -221,14 +237,15 @@ Las actualizaciones recientes incluyen:
 1. **Campo teams**: Proporciona información estructurada sobre los equipos participantes
 2. **Campo end_time**: Especifica la hora de finalización del evento
 3. **Estado 'completed'**: Nuevo estado para eventos finalizados
+4. **Campo highlights_url**: Enlaces a videos de highlights para eventos completados
 
-Estos cambios permiten una mejor visualización de eventos y un seguimiento más preciso del ciclo de vida.
+Estos cambios permiten una mejor visualización de eventos, acceso a contenido multimedia y un seguimiento más preciso del ciclo de vida.
 
 ## Consultas Comunes
 
-### Obtener Eventos Destacados con Equipos
+### Obtener Eventos Destacados con Equipos y Highlights
 ```sql
-SELECT id, name, sport_type, competition, start_time, end_time, teams, markets, status, image_url 
+SELECT id, name, sport_type, competition, start_time, end_time, teams, markets, status, image_url, highlights_url 
 FROM events 
 WHERE sport_type = ? AND start_time >= ? AND start_time <= ?
 ORDER BY start_time ASC
@@ -261,4 +278,11 @@ SELECT id FROM users WHERE username = ?
   - Migrar a una base de datos más robusta como PostgreSQL
   - Implementar una capa de seguridad adicional para la autenticación (como validación de firmas Ethereum)
   - Considerar el uso de índices adicionales para mejorar el rendimiento de consultas frecuentes
+  - Implementar un sistema más robusto de migraciones con versiones y comprobación de estado
 
+## Actualizaciones Recientes
+
+1. **Mayo 2025**:
+   - Adición del campo `highlights_url` a la tabla `events`
+   - Inclusión de enlaces a highlights para eventos existentes
+   - Script de migración automática para manejar la transición
