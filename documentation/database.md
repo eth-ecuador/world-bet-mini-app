@@ -89,6 +89,7 @@ Almacena los eventos deportivos disponibles para apostar.
 | status             | TEXT    | Estado del evento (upcoming, live, completed) |
 | image_url          | TEXT    | URL de la imagen del evento                   |
 | stats              | TEXT    | Estadísticas del evento en formato JSON       |
+| highlights_url     | TEXT    | URL de YouTube con highlights del partido     |
 
 #### Estructura del campo `markets` (JSON)
 

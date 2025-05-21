@@ -55,11 +55,12 @@ class Event:
                 "sport_type": row_dict['sport_type'],
                 "competition": row_dict['competition'],
                 "start_time": row_dict['start_time'],
-                "end_time": row_dict.get('end_time'),  # Incluir fecha de fin
-                "teams": teams,  # Incluir equipos
+                "end_time": row_dict.get('end_time'),
+                "teams": teams,
                 "main_markets": [markets[0]] if markets else [],
                 "status": row_dict['status'],
-                "image_url": row_dict['image_url']
+                "image_url": row_dict['image_url'],
+                "highlights_url": row_dict.get('highlights_url')  # Incluir en la respuesta
             })
         
         conn.close()

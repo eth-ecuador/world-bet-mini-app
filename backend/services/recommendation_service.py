@@ -1,3 +1,5 @@
+#codigo archivo recommendation_service.py
+
 from models.recommendation import Recommendation
 from models.bet import Bet
 import random
@@ -254,3 +256,5 @@ def force_recommendation(current_user):
         'recommendations': recommendations,
         'notice': 'Estas son recomendaciones forzadas para demostración'
     }), 200
+
+#temrina codigo de services/recommendation_service.py

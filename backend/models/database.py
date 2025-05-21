@@ -63,7 +63,8 @@ def init_db():
         teams TEXT,    -- JSON (Nuevo campo para equipos)
         status TEXT DEFAULT 'upcoming',
         image_url TEXT,
-        stats TEXT  -- JSON
+        stats TEXT  -- JSON,
+        highlights_url TEXT  -- Nueva columna para los highlights
     );
     
     -- Tabla de usuarios
@@ -153,85 +154,6 @@ def populate_sample_data():
     # Eventos para el domingo y días próximos
     events = []
     
-    # 2. Lakers vs Celtics - Equipos y datos
-    lakers_celtics_teams = json.dumps([
-        {
-            "id": "la-lakers-001",
-            "name": "Lakers",
-            "logo_url": "https://r2.thesportsdb.com/images/media/team/badge/d8uoxw1714254511.png",
-            "is_home": True
-        },
-        {
-            "id": "boston-celtics-001",
-            "name": "Celtics",
-            "logo_url": "https://r2.thesportsdb.com/images/media/team/badge/4j85bn1667936589.png",
-            "is_home": False
-        }
-    ])
-    
-    lakers_celtics_markets = json.dumps([
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Match Winner",
-            "selections": [
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Lakers",
-                    "odds": 1.8
-                },
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Celtics",
-                    "odds": 2.1
-                }
-            ]
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Total Points",
-            "selections": [
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Over 215.5",
-                    "odds": 1.9
-                },
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Under 215.5",
-                    "odds": 1.9
-                }
-            ]
-        }
-    ])
-    
-    lakers_celtics_stats = json.dumps({
-        "team1_form": ["W", "W", "L", "W", "W"],
-        "team2_form": ["L", "W", "W", "W", "L"],
-        "head_to_head": {
-            "total_matches": 32,
-            "team1_wins": 15,
-            "team2_wins": 17,
-            "draws": 0
-        }
-    })
-    
-    lakers_celtics_end_time = sunday.replace(hour=21, minute=0).isoformat()
-    
-    events.append((
-        str(uuid.uuid4()),
-        "Lakers vs Celtics",
-        "basketball",
-        "NBA",
-        sunday.replace(hour=18, minute=30).isoformat(),
-        lakers_celtics_end_time,  # Fecha de fin
-        "Staples Center, Los Angeles",
-        "NBA Finals Game 3",
-        lakers_celtics_markets,
-        lakers_celtics_teams,  # Equipos
-        "upcoming",
-        "https://cdn.nba.com/teams/legacy/www.nba.com/celtics/sites/celtics/files/getty-images-1194990159.jpg",
-        lakers_celtics_stats
-    ))
     
     # 3. Nadal vs Djokovic - Equipos y datos
     nadal_djokovic_teams = json.dumps([
@@ -320,7 +242,8 @@ def populate_sample_data():
         nadal_djokovic_teams,  # Equipos
         "upcoming",
         "https://estaticos-cdn.prensaiberica.es/clip/ff190822-e2d5-40ab-9df7-8ccdbd924c45_16-9-discover-aspect-ratio_default_0.jpg",
-        nadal_djokovic_stats
+        nadal_djokovic_stats,
+        "https://www.youtube.com/watch?v=0c8RD3fd9hc"  # Añadir enlace de highlight
     ))
     
     # 4. Ferrari vs Red Bull - Equipos y datos
@@ -391,71 +314,7 @@ def populate_sample_data():
         "https://mir-s3-cdn-cf.behance.net/project_modules/fs/c39372105002709.5f6f665700bd5.jpg",
         f1_stats
     ))
-    
-    
-    # 7. Warriors vs Suns - Equipos y datos
-    warriors_suns_teams = json.dumps([
-        {
-            "id": "gs-warriors-001",
-            "name": "Warriors",
-            "logo_url": "https://r2.thesportsdb.com/images/media/team/badge/w8b9kw1646347767.png",
-            "is_home": True
-        },
-        {
-            "id": "phoenix-suns-001",
-            "name": "Suns",
-            "logo_url": "https://r2.thesportsdb.com/images/media/team/badge/qrtuxq1422919040.png",
-            "is_home": False
-        }
-    ])
-    
-    warriors_suns_markets = json.dumps([
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Match Winner",
-            "selections": [
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Warriors",
-                    "odds": 1.6
-                },
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Suns",
-                    "odds": 2.4
-                }
-            ]
-        }
-    ])
-    
-    warriors_suns_stats = json.dumps({
-        "team1_form": ["W", "W", "W", "L", "W"],
-        "team2_form": ["L", "W", "W", "W", "W"],
-        "head_to_head": {
-            "total_matches": 28,
-            "team1_wins": 18,
-            "team2_wins": 10,
-            "draws": 0
-        }
-    })
-    
-    warriors_suns_end_time = (current_date + datetime.timedelta(days=5)).replace(hour=21, minute=30).isoformat()
-    
-    events.append((
-        str(uuid.uuid4()),
-        "Warriors vs Suns",
-        "basketball",
-        "NBA",
-        (current_date + datetime.timedelta(days=5)).replace(hour=19, minute=0).isoformat(),
-        warriors_suns_end_time,  # Fecha de fin
-        "Chase Center, San Francisco",
-        "Western Conference Playoffs",
-        warriors_suns_markets,
-        warriors_suns_teams,  # Equipos
-        "upcoming",
-        "https://i.ytimg.com/vi/MI-JqsONHsg/maxresdefault.jpg",
-        warriors_suns_stats
-    ))
+
     
     # 8. Medvedev vs Alcaraz - Equipos y datos
     medvedev_alcaraz_teams = json.dumps([
@@ -518,77 +377,11 @@ def populate_sample_data():
         medvedev_alcaraz_teams,  # Equipos
         "upcoming",
         "https://i.ytimg.com/vi/f5Iz697rh0E/sddefault.jpg",
-        medvedev_alcaraz_stats
+        medvedev_alcaraz_stats,
+        "https://www.youtube.com/watch?v=0c8RD3fd9hc"  # Añadir enlace de highlight
     ))
     
-    # 9. Arsenal vs Tottenham - Equipos y datos
-    arsenal_tottenham_teams = json.dumps([
-        {
-            "id": "arsenal-001",
-            "name": "Arsenal",
-            "logo_url": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
-            "is_home": True
-        },
-        {
-            "id": "tottenham-001",
-            "name": "Tottenham",
-            "logo_url": "https://r2.thesportsdb.com/images/media/team/badge/dfyfhl1604094109.png",
-            "is_home": False
-        }
-    ])
     
-    arsenal_tottenham_markets = json.dumps([
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Match Winner",
-            "selections": [
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Arsenal",
-                    "odds": 2.0
-                },
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Draw",
-                    "odds": 3.4
-                },
-                {
-                    "id": str(uuid.uuid4()),
-                    "name": "Tottenham",
-                    "odds": 3.8
-                }
-            ]
-        }
-    ])
-    
-    arsenal_tottenham_stats = json.dumps({
-        "team1_form": ["W", "D", "W", "W", "L"],
-        "team2_form": ["L", "W", "D", "W", "W"],
-        "head_to_head": {
-            "total_matches": 192,
-            "team1_wins": 80,
-            "team2_wins": 60,
-            "draws": 52
-        }
-    })
-    
-    arsenal_tottenham_end_time = (current_date + datetime.timedelta(days=7)).replace(hour=18, minute=30).isoformat()
-    
-    events.append((
-        str(uuid.uuid4()),
-        "Arsenal vs Tottenham",
-        "football",
-        "Premier League",
-        (current_date + datetime.timedelta(days=7)).replace(hour=16, minute=30).isoformat(),
-        arsenal_tottenham_end_time,  # Fecha de fin
-        "Emirates Stadium, London",
-        "North London Derby",
-        arsenal_tottenham_markets,
-        arsenal_tottenham_teams,  # Equipos
-        "upcoming",
-        "https://e0.365dm.com/15/11/2048x1152/super-sunday-arsenal-tottenham_3373187.jpg",
-        arsenal_tottenham_stats
-    ))
     
     # 10. Tyson vs Joshua - Equipos y datos
     tyson_joshua_teams = json.dumps([
@@ -656,15 +449,17 @@ def populate_sample_data():
         tyson_joshua_teams,  # Equipos
         "upcoming",
         "https://www.boxingnews24.com/wp-content/uploads/2022/09/joshua-fury-Boxing-Photos.jpg",
-        tyson_joshua_stats
+        tyson_joshua_stats,
+        "https://www.youtube.com/watch?v=0c8RD3fd9hc"  # Añadir enlace de highlight
     ))
     
-    # Inserta6r todos los eventos con los nuevos campos teams y end_time
+
+    # Actualizar la sentencia INSERT
     cursor.executemany('''
     INSERT OR IGNORE INTO events (
         id, name, sport_type, competition, start_time, end_time, venue, 
-        description, markets, teams, status, image_url, stats
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        description, markets, teams, status, image_url, stats, highlights_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', events)
     
     conn.commit()

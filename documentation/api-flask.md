@@ -261,7 +261,8 @@ curl -X GET "https://world-bet-mini-app.onrender.com/events/550e8400-e29b-41d4-a
       "team2_wins": 95,
       "draws": 54
     }
-  }
+  },
+  "highlights_url": "https://www.youtube.com/watch?v=0c8RD3fd9hc"
 }
 ```
 
