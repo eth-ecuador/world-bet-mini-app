@@ -478,7 +478,18 @@ export default function BettingModal({
               </div>
 
               <div className="flex justify-between items-center px-1">
-                <span className="text-sm text-gray-500">Potencial</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Potencial</span>
+                  <button
+                    type="button"
+                    onClick={handleGetUSDC}
+                    className="flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors"
+                    aria-label="Get USDC"
+                    title="Get USDC"
+                  >
+                    <span className="text-blue-600 font-bold text-xs">+</span>
+                  </button>
+                </div>
                 <span className="text-xl font-semibold text-blue-600">
                   ${getPotentialWin()} USDC
                 </span>
@@ -497,10 +508,20 @@ export default function BettingModal({
                   Obtener USDC
                 </Button>
               ) : (
-                <Pay 
-                  amount={Math.max(1, parseFloat(betAmount.toFixed(2)))} 
-                  onSuccess={handlePaymentComplete}
-                />
+                <>
+                  <Pay 
+                    amount={Math.max(1, parseFloat(betAmount.toFixed(2)))} 
+                    onSuccess={handlePaymentComplete}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 text-base font-medium text-blue-600 hover:bg-blue-50 border-blue-200 rounded-full"
+                    onClick={handleGetUSDC}
+                  >
+                    Obtener más USDC
+                  </Button>
+                </>
               )}
             </div>
           </div>

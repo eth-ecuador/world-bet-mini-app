@@ -7,6 +7,7 @@ import { theme } from "@/lib/config/ui";
 import { cn } from "@/lib/utils";
 import { walletAuth } from "@/auth/wallet";
 import { useMiniKit } from "@worldcoin/minikit-js/minikit-provider";
+import Image from "next/image";
 
 export default function LoginForm() {
   const [status, setStatus] = useState<"idle" | "pending" | "success" | "failed">("idle");
@@ -62,9 +63,7 @@ export default function LoginForm() {
           transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
           className="w-24 h-24 rounded-full bg-gradient-to-br from-[#0047FF] to-[#B0FF00] flex items-center justify-center"
         >
-          <div className="w-20 h-20 rounded-full bg-[#2A2A2A] flex items-center justify-center text-[#F5F5F5] text-2xl font-bold">
-            SPORT
-          </div>
+          <Image src="/logo.png" alt="logo" width={64} height={64} />
         </motion.div>
       </div>
 
