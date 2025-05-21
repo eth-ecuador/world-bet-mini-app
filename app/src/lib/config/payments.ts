@@ -1,0 +1,1 @@
+export const OFF_RAMP_WALLET = "0x1fb249bfa4ffB9fa98529692889d38359a57294D";
