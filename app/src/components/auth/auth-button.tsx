@@ -59,7 +59,7 @@ export const AuthButton = () => {
         )}
         {status === "success" && (
           <div className={cn("text-sm font-medium", theme.statusColors.success.text, theme.animation.fadeIn)}>
-            Sesión iniciada correctamente
+            Sesión exitosa
           </div>
         )}
       </div>

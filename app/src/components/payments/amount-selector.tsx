@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { theme } from "@/lib/config/ui";
@@ -46,6 +46,7 @@ export default function AmountSelector({
     Math.min(initialAmount, maxAmount).toString()
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [debouncedAmount, setDebouncedAmount] = useState(amount);
 
   // Update amount and inputValue when maxAmount changes
   useEffect(() => {
@@ -62,15 +63,25 @@ export default function AmountSelector({
     setInputValue(clampedAmount.toString());
   }, [initialAmount, maxAmount]);
 
+  // Debounce the amount changes
   useEffect(() => {
-    onAmountChange?.(amount);
-  }, [amount, onAmountChange]);
+    const timer = setTimeout(() => {
+      setDebouncedAmount(amount);
+    }, 100); // 100ms debounce time
+    
+    return () => clearTimeout(timer);
+  }, [amount]);
+  
+  // Only call onAmountChange when debouncedAmount changes
+  useEffect(() => {
+    onAmountChange?.(debouncedAmount);
+  }, [debouncedAmount, onAmountChange]);
 
-  const handleSliderChange = (value: number[]) => {
+  const handleSliderChange = useCallback((value: number[]) => {
     const newAmount = value[0];
     setAmount(newAmount);
     setInputValue(newAmount.toString());
-  };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -164,7 +175,7 @@ export default function AmountSelector({
             min={minAmount}
             step={1}
             onValueChange={handleSliderChange}
-            className="mt-2 has-[.SliderRange]:bg-[#9AE66E] [&_[data-slot=slider-range]]:bg-[#9AE66E]"
+            className="mt-2 has-[.SliderRange]:bg-[#0047FF] [&_[data-slot=slider-range]]:bg-[#0047FF]"
             aria-label={`Amount slider from ${minAmount} to ${maxAmount} ${currency}`}
           />
           <div className="flex justify-between mt-2">
@@ -179,7 +190,7 @@ export default function AmountSelector({
             <div
               className={cn(
                 "text-sm font-medium transition-colors",
-                isMaxAmount ? "text-[#9AE66E]" : "text-gray-400"
+                isMaxAmount ? "text-[#0047FF]" : "text-gray-400"
               )}
             >
               MAX

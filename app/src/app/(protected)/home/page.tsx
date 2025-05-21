@@ -1,10 +1,13 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { format, addDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import Events from "./_components/events";
 import AmountSelector from "@/components/payments/amount-selector";
+
+// Memoize Events component to prevent unnecessary re-renders
+const MemoizedEvents = memo(Events);
 
 export default function HomePage() {
   // Parse the initial date
@@ -22,7 +25,7 @@ export default function HomePage() {
   const today = parseInitialDate();
   const [selectedDate, setSelectedDate] = useState(today);
   const [startDate] = useState(today);
-  const [bettingAmount, setBettingAmount] = useState(20);
+  const [bettingAmount, setBettingAmount] = useState(10);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Generate 5 days starting from startDate
@@ -41,13 +44,14 @@ export default function HomePage() {
     }
   }, [selectedDate]);
 
-  // Handle amount change
-  const handleAmountChange = (amount: number) => {
+  // Handle amount change with useCallback to keep function reference stable
+  const handleAmountChange = useCallback((amount: number) => {
+    console.log("Amount changed:", amount);
     setBettingAmount(amount);
-  };
+  }, []);
 
   return (
-    <div className="flex flex-col min-h-screen pt-16">
+    <div className="flex flex-col min-h-screen">
       <div className="px-4 py-3 bg-[#1A1A1A] shadow-md container mx-auto">
         <div className="flex justify-between">
           {days.map((day) => (
@@ -65,11 +69,11 @@ export default function HomePage() {
                 className={cn(
                   "flex h-14 w-14 flex-col items-center justify-center rounded-full text-lg font-medium transition-all",
                   isSameDay(day, selectedDate)
-                    ? "bg-[#9AE66E] text-gray-900 shadow-lg shadow-[#9AE66E]/20"
+                    ? "bg-[#0047FF] text-gray-900 shadow-lg shadow-[#0047FF]/20"
                     : "bg-[#2A2A2A] text-gray-300 hover:bg-gray-700",
                   isToday(day) &&
                     !isSameDay(day, selectedDate) &&
-                    "ring-2 ring-[#9AE66E]/30"
+                    "ring-2 ring-[#0047FF]/30"
                 )}
               >
                 {format(day, "d", { locale: es })}
@@ -78,8 +82,15 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-      <div className="sticky top-16 z-10 bg-[#1A1A1A] p-4 shadow-lg">
-        <AmountSelector onAmountChange={handleAmountChange} initialAmount={bettingAmount} />
+
+      {/* Amount Selector - sticky below fixed header */}
+      <div className="sticky top-16 z-20 bg-[#1A1A1A] p-4 shadow-lg">
+        <AmountSelector 
+          onAmountChange={handleAmountChange} 
+          initialAmount={bettingAmount}
+          maxAmount={100} 
+          currency="USDC" 
+        />
       </div>
 
       {/* Content area */}
@@ -96,7 +107,7 @@ export default function HomePage() {
         </div>
 
         {/* Pass selectedDate and bettingAmount to Events component */}
-        <Events selectedDate={selectedDate} bettingAmount={bettingAmount} />
+        <MemoizedEvents selectedDate={selectedDate} bettingAmount={bettingAmount} />
       </div>
     </div>
   );

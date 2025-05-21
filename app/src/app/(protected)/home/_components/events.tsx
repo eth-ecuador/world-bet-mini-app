@@ -2,16 +2,19 @@
 
 import { getEvents, EventsFilterParams } from "@/services/events/events.service";
 import { GetEventsResponse } from "@/services/events/events.type";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import EventCard from "./event-card";
 import { parseISO, startOfDay, endOfDay } from "date-fns";
 
+// Memoize EventCard to prevent unnecessary re-renders
+const MemoizedEventCard = memo(EventCard);
+
 interface EventsProps {
-  selectedDate?: Date;
-  bettingAmount?: number;
+  selectedDate: Date;
+  bettingAmount: number;
 }
 
-export default function Events({ selectedDate, bettingAmount = 20 }: EventsProps) {
+export default function Events({ selectedDate, bettingAmount }: EventsProps) {
   const [eventsData, setEventsData] = useState<GetEventsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,21 +122,9 @@ export default function Events({ selectedDate, bettingAmount = 20 }: EventsProps
 
       <div className="flex flex-col w-full gap-4 justify-center items-center">
         {eventsData?.events?.map((event) => (
-          <EventCard key={event.id} event={event} bettingAmount={bettingAmount} />
+          <MemoizedEventCard key={event.id} event={event} bettingAmount={bettingAmount} />
         ))}
       </div>
-      
-      {/* Load More Button */}
-      {!loading && eventsData && eventsData.events && eventsData.events.length > 0 && (
-        <div className="flex justify-center mt-4 mb-8">
-          <button
-            onClick={loadMore}
-            className="px-6 py-2 bg-green-100 text-green-800 rounded-full font-medium hover:bg-green-200"
-          >
-            Cargar más partidos
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     domains: [
       "static.usernames.app-backend.toolsforhumanity.com",
       "r2.thesportsdb.com",
+      "thesportsdb.com",
     ],
   },
   allowedDevOrigins: [

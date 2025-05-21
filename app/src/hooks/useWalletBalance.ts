@@ -21,8 +21,8 @@ export interface UseWalletBalanceResult {
  */
 export function useWalletBalance(address?: string): UseWalletBalanceResult {
   const [balances, setBalances] = useState<WalletBalances>({
-    USDC: "0.00",
-    WLD: "0.00"
+    USDC: "10.00",
+    WLD: "10.00"
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

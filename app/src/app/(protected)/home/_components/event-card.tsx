@@ -15,11 +15,11 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface EventCardProps {
-  event?: Event;
-  bettingAmount?: number;
+  event: Event;
+  bettingAmount: number;
 }
 
-export default function EventCard({ event, bettingAmount = 20 }: EventCardProps) {
+export default function EventCard({ event, bettingAmount }: EventCardProps) {
   const [showModal, setShowModal] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 

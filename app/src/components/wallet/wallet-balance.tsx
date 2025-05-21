@@ -12,7 +12,7 @@ import { Token } from "@/components/ui/token";
 import { theme } from "@/lib/config/ui";
 import { cn } from "@/lib/utils";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
-import { Check, Copy, X } from "lucide-react";
+import { Check, Copy, Wallet, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
@@ -42,19 +42,11 @@ export function WalletBalance() {
       <Button
         variant="outline"
         size="sm"
-        className="flex items-center gap-2 px-4 py-2 h-10 bg-transparent border border-blue-500 text-white rounded-full hover:bg-[#1c2030]"
+        className="flex items-center justify-center w-10 h-10 p-0 bg-transparent border border-blue-500 text-white rounded-full hover:bg-[#1c2030]"
         onClick={() => setShowModal(true)}
+        aria-label="View wallet balance"
       >
-        {isLoading ? (
-          <span className="text-xs text-gray-300">Loading...</span>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Token value="USDC" size="sm" />
-            <span className="text-sm font-medium text-blue-500">
-              {balances.USDC || "0.00"}
-            </span>
-          </div>
-        )}
+        <Wallet size={18} className="text-blue-500" />
       </Button>
 
       {/* Wallet Dialog */}
