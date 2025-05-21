@@ -7,6 +7,7 @@ import Events from "./_components/events";
 import AmountSelector from "@/components/payments/amount-selector";
 import { SportsNav } from "@/components/layout/spots-nav";
 import { motion } from "framer-motion";
+import { SPORT_TYPES } from "@/services/events/events.service";
 
 // Memoize Events component to prevent unnecessary re-renders
 const MemoizedEvents = memo(Events);
@@ -28,6 +29,7 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [startDate] = useState(today);
   const [bettingAmount, setBettingAmount] = useState(10);
+  const [selectedSport, setSelectedSport] = useState(SPORT_TYPES.FOOTBALL);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Generate 5 days starting from startDate
@@ -38,6 +40,16 @@ export default function HomePage() {
     console.log("Selected day:", day);
     setSelectedDate(day);
   };
+
+  // Handle sport selection
+  const handleSportChange = useCallback((sportType: string) => {
+    console.log("Selected sport:", sportType);
+    setSelectedSport(sportType);
+    // Scroll to top when sport changes
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, []);
 
   // Scroll to top when date changes
   useEffect(() => {
@@ -52,12 +64,28 @@ export default function HomePage() {
     setBettingAmount(amount);
   }, []);
 
+  // Get sport name for display
+  const getSportName = () => {
+    switch(selectedSport) {
+      case SPORT_TYPES.FOOTBALL: return "Fútbol";
+      case SPORT_TYPES.BASKETBALL: return "Baloncesto";
+      case SPORT_TYPES.TENNIS: return "Tenis";
+      case SPORT_TYPES.CRICKET: return "Cricket";
+      case SPORT_TYPES.VOLLEYBALL: return "Voleibol";
+      case SPORT_TYPES.RUGBY: return "Rugby";
+      default: return "Deportes";
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="px-4 py-3 bg-[#1A1A1A] shadow-md container mx-auto">
         {/* Updated Sports Navigation */}
         <div className="mb-6">
-          <SportsNav />
+          <SportsNav 
+            onSportChange={handleSportChange} 
+            initialSport={selectedSport} 
+          />
         </div>
 
         {/* Date selector */}
@@ -98,7 +126,7 @@ export default function HomePage() {
         <AmountSelector
           onAmountChange={handleAmountChange}
           initialAmount={bettingAmount}
-          maxAmount={100}
+          minAmount={1}
           currency="USDC"
         />
       </div>
@@ -111,14 +139,15 @@ export default function HomePage() {
       >
         <div className="flex items-center justify-center">
           <h2 className="text-xl font-semibold text-white text-center">
-            Pronosticar
+            {getSportName()} - Pronosticar
           </h2>
         </div>
 
-        {/* Pass selectedDate and bettingAmount to Events component */}
+        {/* Pass selectedDate, sportType and bettingAmount to Events component */}
         <MemoizedEvents
           selectedDate={selectedDate}
           bettingAmount={bettingAmount}
+          sportType={selectedSport}
         />
       </div>
     </div>

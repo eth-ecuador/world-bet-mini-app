@@ -11,6 +11,16 @@ const MAX_RETRIES = 2;
 // Custom timeout for events requests (in milliseconds)
 const EVENTS_TIMEOUT = 15000; // 15 seconds
 
+// Available sport types for the API
+export const SPORT_TYPES = {
+  FOOTBALL: "football",
+  BASKETBALL: "basketball",
+  TENNIS: "tennis",
+  CRICKET: "cricket",
+  VOLLEYBALL: "volleyball",
+  RUGBY: "rugby",
+};
+
 /**
  * Interface for events filter parameters
  */
@@ -19,6 +29,7 @@ export interface EventsFilterParams {
   date_to?: string;         // Maximum date in YYYY-MM-DD format
   limit?: number;           // Maximum number of results (default: 10)
   page?: number;            // Page number for pagination (default: 1)
+  sport_type?: string;      // Sport type (default: football)
 }
 
 /**
@@ -32,14 +43,15 @@ const debugLog = (message: string, data?: Record<string, unknown> | null) => {
 
 /**
  * Build query string from filter parameters
- * Always includes sport_type=football
+ * Uses football as default sport type if not specified
  */
 const buildQueryString = (params?: EventsFilterParams): string => {
   // Start with a new URLSearchParams object
   const queryParams = new URLSearchParams();
   
-  // Always include football as the sport type
-  queryParams.append('sport_type', 'football');
+  // Use the specified sport type or default to football
+  const sportType = params?.sport_type || SPORT_TYPES.FOOTBALL;
+  queryParams.append('sport_type', sportType);
   
   // Add other filters if provided
   if (params) {
@@ -54,32 +66,33 @@ const buildQueryString = (params?: EventsFilterParams): string => {
 };
 
 /**
- * Get featured football events with improved error handling and retry logic
- * @param filters Optional date and pagination filters
+ * Get featured events with improved error handling and retry logic
+ * @param filters Optional date, sport type, and pagination filters
  */
 export const getEvents = async (filters?: EventsFilterParams): Promise<GetEventsResponse> => {
   let retries = 0;
   
-  // Build the query string from filters (always includes football)
+  // Build the query string from filters (defaults to football if sport_type not specified)
   const queryString = buildQueryString(filters);
   const url = `/events/featured${queryString}`;
   
   debugLog('Filter params', {
     ...filters, 
-    sport_type: 'football' // Always football
+    sport_type: filters?.sport_type || SPORT_TYPES.FOOTBALL
   } as Record<string, unknown>);
   debugLog(`Request URL: ${url}`);
   
   while (retries <= MAX_RETRIES) {
     try {
-      debugLog(`Fetching football events (attempt ${retries + 1}/${MAX_RETRIES + 1})...`);
+      const sportType = filters?.sport_type || SPORT_TYPES.FOOTBALL;
+      debugLog(`Fetching ${sportType} events (attempt ${retries + 1}/${MAX_RETRIES + 1})...`);
       
       // Use a longer timeout for this specific request
       const { data } = await apiClient.get(url, {
         timeout: EVENTS_TIMEOUT
       });
       
-      debugLog("Football events fetched successfully", { count: data?.events?.length });
+      debugLog(`${sportType} events fetched successfully`, { count: data?.events?.length });
       return data;
     } catch (error) {
       const axiosError = error as AxiosError;

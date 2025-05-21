@@ -1,21 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { theme } from "@/lib/config/ui";
+import { SPORT_TYPES } from "@/services/events/events.service";
 
-export const SportsNav = () => {
-  const [selectedSport, setSelectedSport] = useState("Football");
+export interface SportsNavProps {
+  onSportChange?: (sport: string) => void;
+  initialSport?: string;
+}
+
+export const SportsNav = ({ onSportChange, initialSport = SPORT_TYPES.FOOTBALL }: SportsNavProps) => {
+  const [selectedSport, setSelectedSport] = useState(initialSport);
 
   const sports = [
-    { name: "Football", icon: "⚽" },
-    { name: "Basketball", icon: "🏀" },
-    { name: "Tennis", icon: "🎾" },
-    { name: "Cricket", icon: "🏏" },
-    { name: "Volleyball", icon: "🏐" },
-    { name: "Rugby", icon: "🏉" },
+    { id: SPORT_TYPES.FOOTBALL, name: "Football", icon: "⚽" },
+    { id: SPORT_TYPES.BASKETBALL, name: "Basketball", icon: "🏀" },
+    { id: SPORT_TYPES.TENNIS, name: "Tennis", icon: "🎾" },
+    { id: SPORT_TYPES.CRICKET, name: "Cricket", icon: "🏏" },
+    { id: SPORT_TYPES.VOLLEYBALL, name: "Volleyball", icon: "🏐" },
+    { id: SPORT_TYPES.RUGBY, name: "Rugby", icon: "🏉" },
   ];
+
+  // Handle sport selection
+  const handleSportSelect = (sportId: string) => {
+    setSelectedSport(sportId);
+    if (onSportChange) {
+      onSportChange(sportId);
+    }
+  };
+
+  // Initialize with the initial sport
+  useEffect(() => {
+    if (initialSport && initialSport !== selectedSport) {
+      setSelectedSport(initialSport);
+    }
+  }, [initialSport]);
 
   return (
     <motion.div
@@ -28,13 +49,13 @@ export const SportsNav = () => {
         <div className="flex items-center overflow-x-auto gap-3 py-2 px-1 no-scrollbar">
           {sports.map((sport) => (
             <motion.button
-              key={sport.name}
-              onClick={() => setSelectedSport(sport.name)}
+              key={sport.id}
+              onClick={() => handleSportSelect(sport.id)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "flex items-center gap-2 px-5 py-3 rounded-full transition-all duration-200",
-                selectedSport === sport.name
+                selectedSport === sport.id
                   ? "bg-gradient-to-r from-[#0047FF] to-[#B0FF00] text-black font-medium shadow-md"
                   : "bg-[#1A1A1A] text-[#F5F5F5] hover:bg-[#333333]"
               )}

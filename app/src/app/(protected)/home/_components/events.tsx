@@ -1,6 +1,6 @@
 "use client";
 
-import { getEvents, EventsFilterParams } from "@/services/events/events.service";
+import { getEvents, EventsFilterParams, SPORT_TYPES } from "@/services/events/events.service";
 import { GetEventsResponse } from "@/services/events/events.type";
 import React, { useEffect, useState, memo } from "react";
 import EventCard from "./event-card";
@@ -12,16 +12,26 @@ const MemoizedEventCard = memo(EventCard);
 interface EventsProps {
   selectedDate: Date;
   bettingAmount: number;
+  sportType?: string;
 }
 
-export default function Events({ selectedDate, bettingAmount }: EventsProps) {
+export default function Events({ selectedDate, bettingAmount, sportType = SPORT_TYPES.FOOTBALL }: EventsProps) {
   const [eventsData, setEventsData] = useState<GetEventsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<EventsFilterParams>({
     limit: 10,
-    page: 1
+    page: 1,
+    sport_type: sportType
   });
+
+  // Update filters when sport type changes
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      sport_type: sportType
+    }));
+  }, [sportType]);
 
   // Load more events
   const loadMore = () => {
@@ -56,14 +66,18 @@ export default function Events({ selectedDate, bettingAmount }: EventsProps) {
       setLoading(true);
       
       // If selectedDate is provided, format it with ISO time for the API
-      const currentFilters = { ...filters };
+      const currentFilters = { 
+        ...filters,
+        sport_type: sportType // Ensure current sport type is used
+      };
+      
       if (selectedDate) {
         // For date_from use start of day (00:00:00)
         const fromDate = formatDateForAPI(selectedDate, true);
         // For date_to use end of day (23:59:59)
         const toDate = formatDateForAPI(selectedDate, false);
         
-        console.log("Using date range for API:", fromDate, "to", toDate);
+        console.log(`Using date range for ${sportType} API:`, fromDate, "to", toDate);
         
         currentFilters.date_from = fromDate;
         currentFilters.date_to = toDate;
@@ -72,27 +86,53 @@ export default function Events({ selectedDate, bettingAmount }: EventsProps) {
       const data = await getEvents(currentFilters);
 
       if (!data || !data.events) {
-        setError("No event data available");
+        setError(`No ${sportType} event data available`);
         return;
       }
 
       setEventsData(data);
-      console.log("Football events loaded:", data);
+      console.log(`${sportType} events loaded:`, data);
     } catch (error) {
-      console.error("Error fetching events:", error);
-      setError("Failed to load events");
+      console.error(`Error fetching ${sportType} events:`, error);
+      setError(`Failed to load ${sportType} events`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch events when component mounts, filters change, or selectedDate changes
+  // Fetch events when component mounts, filters change, selectedDate changes, or sportType changes
   useEffect(() => {
     if (selectedDate) {
-      console.log("Selected date changed:", selectedDate);
+      console.log(`Selected date for ${sportType}:`, selectedDate);
     }
     fetchEvents();
-  }, [filters, selectedDate]);
+  }, [filters, selectedDate, sportType]);
+
+  // Get the appropriate sport icon
+  const getSportIcon = () => {
+    switch(sportType) {
+      case SPORT_TYPES.FOOTBALL: return "⚽";
+      case SPORT_TYPES.BASKETBALL: return "🏀";
+      case SPORT_TYPES.TENNIS: return "🎾";
+      case SPORT_TYPES.CRICKET: return "🏏";
+      case SPORT_TYPES.VOLLEYBALL: return "🏐";
+      case SPORT_TYPES.RUGBY: return "🏉";
+      default: return "🏆";
+    }
+  };
+
+  // Get appropriate sport display name
+  const getSportName = () => {
+    switch(sportType) {
+      case SPORT_TYPES.FOOTBALL: return "fútbol";
+      case SPORT_TYPES.BASKETBALL: return "baloncesto";
+      case SPORT_TYPES.TENNIS: return "tenis";
+      case SPORT_TYPES.CRICKET: return "cricket";
+      case SPORT_TYPES.VOLLEYBALL: return "voleibol";
+      case SPORT_TYPES.RUGBY: return "rugby";
+      default: return "deporte";
+    }
+  };
 
   return (
     <div className="flex flex-col w-full container mx-auto px-4 pt-2 pb-8">
@@ -104,7 +144,7 @@ export default function Events({ selectedDate, bettingAmount }: EventsProps) {
               Loading...
             </span>
           </div>
-          <p className="mt-2">Cargando partidos de fútbol...</p>
+          <p className="mt-2">Cargando partidos de {getSportName()}...</p>
         </div>
       )}
       
@@ -115,8 +155,9 @@ export default function Events({ selectedDate, bettingAmount }: EventsProps) {
       )}
       
       {!loading && !error && (!eventsData || !eventsData.events || eventsData.events.length === 0) && (
-        <div className="p-8 text-center">
-          No hay partidos de fútbol disponibles para la fecha seleccionada
+        <div className="p-8 text-center flex flex-col items-center">
+          <span className="text-4xl mb-2">{getSportIcon()}</span>
+          <p>No hay partidos de {getSportName()} disponibles para la fecha seleccionada</p>
         </div>
       )}
 

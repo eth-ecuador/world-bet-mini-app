@@ -50,6 +50,105 @@ interface BettingModalProps {
   bettingAmount: number;
 }
 
+// New interface for confirmation modal
+interface ConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  betDetails: {
+    homeTeam: string;
+    awayTeam: string;
+    selection: string;
+    team: string;
+    odds: number;
+    amount: number;
+    potentialWin: string;
+  };
+}
+
+// New confirmation modal component
+function ConfirmationModal({
+  isOpen,
+  onClose,
+  betDetails,
+}: ConfirmationModalProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-[400px] rounded-xl border border-gray-200 bg-white">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Confirmación de Apuesta</DialogTitle>
+        </DialogHeader>
+        
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute right-2 top-2 h-8 w-8 rounded-full bg-gray-100 p-0 flex items-center justify-center hover:bg-gray-200 transition-colors z-10"
+          aria-label="Close"
+        >
+          <X size={18} className="text-gray-500" />
+        </button>
+        
+        {/* Success icon */}
+        <div className="pt-8 flex justify-center">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+            <Check size={32} className="text-green-600" />
+          </div>
+        </div>
+        
+        {/* Confirmation message */}
+        <div className="p-5 text-center">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">¡Apuesta Confirmada!</h3>
+          <p className="text-gray-600 mb-4">Tu apuesta ha sido procesada correctamente</p>
+        </div>
+        
+        {/* Bet details */}
+        <div className="px-5 pb-4">
+          <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+            <div className="text-sm text-gray-500 text-center mb-2">
+              {betDetails.homeTeam} vs {betDetails.awayTeam}
+            </div>
+            
+            <div className="flex items-center justify-center">
+              <div className="px-6 py-2 bg-gray-100 rounded-full">
+                <div className="flex items-center space-x-3">
+                  <span className="text-base font-semibold text-gray-900">
+                    {betDetails.selection}
+                  </span>
+                  <span className="text-base font-medium text-gray-700">
+                    {betDetails.team}
+                  </span>
+                  <span className="text-base font-semibold text-blue-600">
+                    {betDetails.odds.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-between border-t border-gray-200 pt-3 mt-3">
+              <span className="text-sm font-medium text-gray-600">Monto:</span>
+              <span className="text-sm font-semibold text-gray-900">${betDetails.amount.toFixed(2)} USDC</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm font-medium text-gray-600">Potencial:</span>
+              <span className="text-sm font-semibold text-green-600">${betDetails.potentialWin} USDC</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="p-5 border-t border-gray-200">
+          <Button 
+            onClick={onClose}
+            className="w-full h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Aceptar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function BettingModal({
   isOpen,
   onClose,
@@ -60,8 +159,6 @@ export default function BettingModal({
   initialSelection,
   bettingAmount,
 }: BettingModalProps) {
-  const paymentWallet =
-    OFF_RAMP_WALLET || "0x1fb249bfa4ffB9fa98529692889d38359a57294D";
   const [selectedOption, setSelectedOption] = useState<string | null>(
     initialSelection || null
   );
@@ -69,6 +166,10 @@ export default function BettingModal({
   const [inputValue, setInputValue] = useState(bettingAmount.toFixed(2));
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Add state for confirmation modal
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+
   const { walletAddress, externalApiAuthenticated } = useAuthComplete();
   const address = walletAddress || "";
   const { balances } = useWalletBalance(address);
@@ -79,7 +180,10 @@ export default function BettingModal({
   // Direct sync with betting amount prop
   useEffect(() => {
     console.log("Syncing with new bettingAmount:", bettingAmount);
-    const newAmount = Math.min(bettingAmount, maxBetAmount > 0 ? maxBetAmount : Infinity);
+    const newAmount = Math.min(
+      bettingAmount,
+      maxBetAmount > 0 ? maxBetAmount : Infinity
+    );
     setBetAmount(newAmount);
     setInputValue(newAmount.toFixed(2));
   }, [bettingAmount, maxBetAmount]);
@@ -87,7 +191,7 @@ export default function BettingModal({
   // Set initial bet amount based on the user's USDC balance and the passed bettingAmount
   useEffect(() => {
     console.log("Modal received bettingAmount:", bettingAmount);
-    
+
     // If maxBetAmount is available and valid
     if (maxBetAmount > 0) {
       // Use the smaller of defaultAmount or maxBetAmount
@@ -160,8 +264,8 @@ export default function BettingModal({
     return Math.max(1, betAmount);
   };
 
-  const getPotentialWin = () => {
-    if (!selectedOption) return 0;
+  const getPotentialWin = (): string => {
+    if (!selectedOption) return "0.00";
 
     const selectedOdd =
       selectedOption === "home"
@@ -188,6 +292,13 @@ export default function BettingModal({
   };
 
   const selected = getSelectedDetails();
+  
+  // Handle payment completion
+  const handlePaymentComplete = () => {
+    setPaymentComplete(true);
+    onClose(); // Close betting modal
+    setShowConfirmation(true); // Show confirmation modal
+  };
 
   const handleBetSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -207,7 +318,7 @@ export default function BettingModal({
         setIsProcessing(false);
         return;
       }
-      
+
       // Here you would handle the bet submission logic using the API
       // Example:
       // await apiClient.post('/bets', {
@@ -215,16 +326,11 @@ export default function BettingModal({
       //   selection: selectedOption,
       //   amount: getValidBetAmount()
       // });
-      
+
       // Simulate API call
       setTimeout(() => {
         setIsProcessing(false);
-      alert(
-        `¡Apuesta realizada! ${selectedOption} - $${getValidBetAmount().toFixed(
-          2
-        )}`
-      );
-      onClose();
+        handlePaymentComplete();
       }, 1500);
     } catch (error) {
       console.error("Error submitting bet:", error);
@@ -241,145 +347,172 @@ export default function BettingModal({
     window.location.href = deeplink;
   };
 
+  // Create a title for the dialog based on the teams
+  const dialogTitle = `${homeTeam.name} vs ${awayTeam.name}`;
+  
+  // Bet details for confirmation modal
+  const betDetails = {
+    homeTeam: homeTeam.name,
+    awayTeam: awayTeam.name,
+    selection: selected.type,
+    team: selected.team,
+    odds: selected.odds,
+    amount: getValidBetAmount(),
+    potentialWin: getPotentialWin(),
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-[400px] rounded-xl border border-gray-200 bg-white">
-        {/* Close button */}
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-[400px] rounded-xl border border-gray-200 bg-white">
+          {/* Add DialogHeader and DialogTitle for accessibility */}
+          <DialogHeader className="sr-only">
+            <DialogTitle>{dialogTitle}</DialogTitle>
+          </DialogHeader>
+
+          {/* Close button */}
           <button
             onClick={onClose}
-          className="absolute right-2 top-2 h-8 w-8 rounded-full bg-gray-100 p-0 flex items-center justify-center hover:bg-gray-200 transition-colors z-10"
-          aria-label="Close"
+            className="absolute right-2 top-2 h-8 w-8 rounded-full bg-gray-100 p-0 flex items-center justify-center hover:bg-gray-200 transition-colors z-10"
+            aria-label="Close"
           >
-          <X size={18} className="text-gray-500" />
+            <X size={18} className="text-gray-500" />
           </button>
 
-        {/* Match header */}
-        <div className="p-4 pt-6 flex flex-col items-center space-y-2 text-center">
-          <div className="text-sm text-gray-500">
-            {event.competition} • {event.start_time
-              ? new Date(event.start_time).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "TBD"}
-        </div>
-
-          <div className="flex items-center justify-center space-x-8 mt-2">
-            <div className="flex flex-col items-center space-y-2">
-              <div className="w-14 h-14 relative">
-                    <Image
-                      src={homeTeam.logo_url || "/placeholder.svg"}
-                      alt={homeTeam.name}
-                      fill
-                  className="object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null;
-                        target.src = "/placeholder.svg";
-                      }}
-                    />
-                  </div>
-              <span className="text-sm font-medium text-gray-900">{homeTeam.name}</span>
-                </div>
-
-            <div className="text-lg text-gray-500 font-medium">VS</div>
-
-            <div className="flex flex-col items-center space-y-2">
-              <div className="w-14 h-14 relative">
-                    <Image
-                      src={awayTeam.logo_url || "/placeholder.svg"}
-                      alt={awayTeam.name}
-                      fill
-                  className="object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null;
-                        target.src = "/placeholder.svg";
-                      }}
-                    />
-                  </div>
-              <span className="text-sm font-medium text-gray-900">{awayTeam.name}</span>
-                </div>
-              </div>
+          {/* Match header */}
+          <div className="p-4 pt-6 flex flex-col items-center space-y-2 text-center">
+            <div className="text-sm text-gray-500">
+              {event.competition} •{" "}
+              {event.start_time
+                ? new Date(event.start_time).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "TBD"}
             </div>
 
-        {/* Bet content */}
-        <div className="p-5 space-y-6 border-t border-gray-200">
-          {/* Selected bet pill */}
-          <div className="flex items-center justify-center">
-            <div className="px-6 py-2 bg-gray-100 rounded-full w-fit mx-auto">
-              <div className="flex items-center space-x-3">
-                <span className="text-base font-semibold text-gray-900">{selected.type}</span>
-                <span className="text-base font-medium text-gray-700">{selected.team}</span>
-                <span className="text-base font-semibold text-blue-600">{selected.odds.toFixed(2)}</span>
-                  </div>
-              </div>
-            </div>
-
-          {/* Amount input */}
-          <div className="space-y-4">
-            <div className="text-center mb-1">
-              <span className="text-sm text-gray-500">Monto de apuesta</span>
-              </div>
-
-                <div className="relative">
-              <Input
-                id="amount"
-                        type="text"
-                        inputMode="decimal"
-                        value={inputValue}
-                        onChange={handleAmountChange}
-                        onBlur={handleInputBlur}
-                        onFocus={handleInputFocus}
-                className="text-center text-3xl font-semibold h-14 bg-gray-50 border-gray-200 focus-visible:ring-blue-500 rounded-xl"
-                      />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-xs font-bold text-white">USDC</span>
+            <div className="flex items-center justify-center space-x-8 mt-2">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-14 h-14 relative">
+                  <Image
+                    src={homeTeam.logo_url || "/placeholder.svg"}
+                    alt={homeTeam.name}
+                    fill
+                    className="object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = "/placeholder.svg";
+                    }}
+                  />
                 </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {homeTeam.name}
+                </span>
+              </div>
+
+              <div className="text-lg text-gray-500 font-medium">VS</div>
+
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-14 h-14 relative">
+                  <Image
+                    src={awayTeam.logo_url || "/placeholder.svg"}
+                    alt={awayTeam.name}
+                    fill
+                    className="object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = "/placeholder.svg";
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {awayTeam.name}
+                </span>
               </div>
             </div>
-
-            <div className="flex justify-between items-center px-1">
-              <span className="text-sm text-gray-500">Potencial</span>
-              <span className="text-xl font-semibold text-blue-600">${getPotentialWin()} USDC</span>
-              </div>
           </div>
 
-          {/* Actions */}
-          <div className="space-y-3 pt-4">
-            {maxBetAmount <= 0 ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-14 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-full"
-                onClick={handleGetUSDC}
-              >
-                Obtener USDC
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                className="w-full h-14 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
-                disabled={isProcessing || betAmount <= 0}
-                onClick={handleBetSubmit}
-              >
-                {isProcessing ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Procesando
+          {/* Bet content */}
+          <div className="p-5 space-y-6 border-t border-gray-200">
+            {/* Selected bet pill */}
+            <div className="flex items-center justify-center">
+              <div className="px-6 py-2 bg-gray-100 rounded-full w-fit mx-auto">
+                <div className="flex items-center space-x-3">
+                  <span className="text-base font-semibold text-gray-900">
+                    {selected.type}
                   </span>
-                ) : (
-                  "Realizar Apuesta"
-                )}
-              </Button>
-            )}
+                  <span className="text-base font-medium text-gray-700">
+                    {selected.team}
+                  </span>
+                  <span className="text-base font-semibold text-blue-600">
+                    {selected.odds.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Amount input */}
+            <div className="space-y-4">
+              <div className="text-center mb-1">
+                <span className="text-sm text-gray-500">Monto de apuesta</span>
+              </div>
+
+              <div className="relative">
+                <Input
+                  id="amount"
+                  type="text"
+                  inputMode="decimal"
+                  value={inputValue}
+                  onChange={handleAmountChange}
+                  onBlur={handleInputBlur}
+                  onFocus={handleInputFocus}
+                  className="text-center text-3xl font-semibold h-14 bg-gray-50 border-gray-200 focus-visible:ring-blue-500 rounded-xl"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                    <span className="text-xs font-bold text-white">USDC</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center px-1">
+                <span className="text-sm text-gray-500">Potencial</span>
+                <span className="text-xl font-semibold text-blue-600">
+                  ${getPotentialWin()} USDC
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-3 pt-4">
+              {maxBetAmount <= 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-14 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-full"
+                  onClick={handleGetUSDC}
+                >
+                  Obtener USDC
+                </Button>
+              ) : (
+                <Pay 
+                  amount={Math.max(1, parseFloat(betAmount.toFixed(2)))} 
+                  onSuccess={handlePaymentComplete}
+                />
+              )}
+            </div>
           </div>
-          </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Confirmation Modal - shown after payment is complete */}
+      <ConfirmationModal 
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        betDetails={betDetails}
+      />
+    </>
   );
 }
