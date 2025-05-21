@@ -52,6 +52,7 @@ export const AuthButton = () => {
         pending: 'Logging in',
         success: 'Logged in',
       }}
+      className='text-white'
       state={isPending ? 'pending' : undefined}
     >
       <Button
@@ -65,7 +66,7 @@ export const AuthButton = () => {
           border: '1px solid #ffffff',
         }}
       >
-        Login with Wallet
+        Ingresar
       </Button>
     </LiveFeedback>
   );
