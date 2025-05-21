@@ -1,4 +1,4 @@
-import { AuthButton } from "@/components/auth/auth-button";
+import LoginForm from "@/components/auth/auth-form";
 
 export default function Home() {
   return (
@@ -10,7 +10,7 @@ export default function Home() {
           style={{ animationDelay: "1s" }}
         ></div>
       </div>
-      <AuthButton />
+      <LoginForm />
     </main>
   );
 }

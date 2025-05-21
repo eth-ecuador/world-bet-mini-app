@@ -5,6 +5,8 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import Events from "./_components/events";
 import AmountSelector from "@/components/payments/amount-selector";
+import { SportsNav } from "@/components/layout/spots-nav";
+import { motion } from "framer-motion";
 
 // Memoize Events component to prevent unnecessary re-renders
 const MemoizedEvents = memo(Events);
@@ -53,11 +55,19 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="px-4 py-3 bg-[#1A1A1A] shadow-md container mx-auto">
-        <div className="flex justify-between">
+        {/* Updated Sports Navigation */}
+        <div className="mb-6">
+          <SportsNav />
+        </div>
+
+        {/* Date selector */}
+        <div className="flex justify-between mt-4">
           {days.map((day) => (
-            <button
+            <motion.button
               key={day.toString()}
               onClick={() => handleDateSelect(day)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className="flex flex-col items-center"
             >
               <span className="text-xs font-medium mb-1 text-gray-400">
@@ -67,9 +77,9 @@ export default function HomePage() {
               {/* Date circle */}
               <div
                 className={cn(
-                  "flex h-14 w-14 flex-col items-center justify-center rounded-full text-lg font-medium transition-all",
+                  "flex h-14 w-14 flex-col items-center justify-center rounded-full text-lg font-medium transition-all shadow-sm",
                   isSameDay(day, selectedDate)
-                    ? "bg-[#0047FF] text-gray-900 shadow-lg shadow-[#0047FF]/20"
+                    ? "bg-gradient-to-r from-[#0047FF] to-[#B0FF00] text-[#1A1A1A] shadow-lg shadow-[#0047FF]/20 font-semibold"
                     : "bg-[#2A2A2A] text-gray-300 hover:bg-gray-700",
                   isToday(day) &&
                     !isSameDay(day, selectedDate) &&
@@ -78,36 +88,38 @@ export default function HomePage() {
               >
                 {format(day, "d", { locale: es })}
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
       {/* Amount Selector - sticky below fixed header */}
       <div className="sticky top-16 z-20 bg-[#1A1A1A] p-4 shadow-lg">
-        <AmountSelector 
-          onAmountChange={handleAmountChange} 
+        <AmountSelector
+          onAmountChange={handleAmountChange}
           initialAmount={bettingAmount}
-          maxAmount={100} 
-          currency="USDC" 
+          maxAmount={100}
+          currency="USDC"
         />
       </div>
+      <div className="h-1 w-full bg-gradient-to-r from-[#0047FF] to-[#B0FF00]"></div>
 
       {/* Content area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-auto bg-gray-950 p-4 space-y-4 w-full"
+        className="flex-1 overflow-auto bg-gray-950 p-4 space-y-2 w-full"
       >
         <div className="flex items-center justify-center">
           <h2 className="text-xl font-semibold text-white text-center">
-            {format(selectedDate, "EEEE, d 'de' MMMM", {
-              locale: es,
-            }).toUpperCase()}
+            Pronosticar
           </h2>
         </div>
 
         {/* Pass selectedDate and bettingAmount to Events component */}
-        <MemoizedEvents selectedDate={selectedDate} bettingAmount={bettingAmount} />
+        <MemoizedEvents
+          selectedDate={selectedDate}
+          bettingAmount={bettingAmount}
+        />
       </div>
     </div>
   );

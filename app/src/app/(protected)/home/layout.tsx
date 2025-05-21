@@ -15,6 +15,7 @@ export default async function ProtectedLayout({
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="container mx-auto mt-16">{children}</main>
+      <div className="mb-16"></div>
       <Footer />
     </div>
   );

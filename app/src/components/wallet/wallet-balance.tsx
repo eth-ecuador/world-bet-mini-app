@@ -36,7 +36,7 @@ export function WalletBalance() {
     ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
     : "";
 
-  return (
+    return (
     <>
       {/* Preview Button */}
       <Button
@@ -61,8 +61,8 @@ export function WalletBalance() {
                 variant="ghost"
                 size="icon"
                 className="p-1.5 hover:bg-[#1c2030] rounded-full transition-colors h-auto w-auto"
-              >
-                <X size={18} className="text-gray-400" />
+            >
+              <X size={18} className="text-gray-400" />
                 <span className="sr-only">Close</span>
               </Button>
             </DialogClose>
@@ -75,53 +75,53 @@ export function WalletBalance() {
           </DialogHeader>
           
           <div className="px-5 pb-5">
-            {/* Address with copy */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-800 mb-4">
-              <p className="text-sm text-gray-400">{shortAddress}</p>
+          {/* Address with copy */}
+          <div className="flex items-center justify-between py-3 border-b border-gray-800 mb-4">
+            <p className="text-sm text-gray-400">{shortAddress}</p>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={copyToClipboard}
+              onClick={copyToClipboard}
                 className="p-1.5 rounded-md hover:bg-[#1c2030] transition-colors h-auto"
-                aria-label="Copy address"
-              >
-                {copied ? (
+              aria-label="Copy address"
+            >
+              {copied ? (
                   <Check size={16} className={cn("text-green-500", theme.animation.fadeIn)} />
-                ) : (
-                  <Copy size={16} className="text-gray-400" />
-                )}
+              ) : (
+                <Copy size={16} className="text-gray-400" />
+              )}
               </Button>
-            </div>
-
-            {/* Token balances */}
-            {isLoading ? (
-              <div className="py-4 text-center text-gray-400 text-sm">
-                Loading...
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-[#1c2030] rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Token value="USDC" size="lg" />
-                    <span className="font-medium">USDC</span>
-                  </div>
-                  <div className="font-bold text-xl">
-                    {balances.USDC !== null ? balances.USDC : "0.00"}
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center p-4 bg-[#1c2030] rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Token value="WLD" size="lg" />
-                    <span className="font-medium">WLD</span>
-                  </div>
-                  <div className="font-bold text-xl">
-                    {balances.WLD !== null ? balances.WLD : "0.00"}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Token balances */}
+          {isLoading ? (
+            <div className="py-4 text-center text-gray-400 text-sm">
+              Loading...
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-4 bg-[#1c2030] rounded-xl">
+                <div className="flex items-center gap-3">
+                    <Token value="USDC" size="lg" />
+                  <span className="font-medium">USDC</span>
+                </div>
+                <div className="font-bold text-xl">
+                  {balances.USDC !== null ? balances.USDC : "0.00"}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center p-4 bg-[#1c2030] rounded-xl">
+                <div className="flex items-center gap-3">
+                    <Token value="WLD" size="lg" />
+                  <span className="font-medium">WLD</span>
+                </div>
+                <div className="font-bold text-xl">
+                  {balances.WLD !== null ? balances.WLD : "0.00"}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         </DialogContent>
       </Dialog>
     </>

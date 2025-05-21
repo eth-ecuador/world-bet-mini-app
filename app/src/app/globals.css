@@ -120,3 +120,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom utility classes */
+@layer utilities {
+  /* Hide scrollbar but maintain scroll functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}

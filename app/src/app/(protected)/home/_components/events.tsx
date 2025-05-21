@@ -95,7 +95,7 @@ export default function Events({ selectedDate, bettingAmount }: EventsProps) {
   }, [filters, selectedDate]);
 
   return (
-    <div className="flex flex-col w-full container mx-auto px-4">
+    <div className="flex flex-col w-full container mx-auto px-4 pt-2 pb-8">
       {/* Events Display */}
       {loading && (
         <div className="p-8 text-center">

@@ -68,7 +68,7 @@ export default function BettingModal({
   const [betAmount, setBetAmount] = useState(bettingAmount);
   const [inputValue, setInputValue] = useState(bettingAmount.toFixed(2));
   const [isProcessing, setIsProcessing] = useState(false);
-
+  
   const { walletAddress, externalApiAuthenticated } = useAuthComplete();
   const address = walletAddress || "";
   const { balances } = useWalletBalance(address);
@@ -207,7 +207,7 @@ export default function BettingModal({
         setIsProcessing(false);
         return;
       }
-
+      
       // Here you would handle the bet submission logic using the API
       // Example:
       // await apiClient.post('/bets', {
@@ -215,16 +215,16 @@ export default function BettingModal({
       //   selection: selectedOption,
       //   amount: getValidBetAmount()
       // });
-
+      
       // Simulate API call
       setTimeout(() => {
         setIsProcessing(false);
-        alert(
-          `¡Apuesta realizada! ${selectedOption} - $${getValidBetAmount().toFixed(
-            2
-          )}`
-        );
-        onClose();
+      alert(
+        `¡Apuesta realizada! ${selectedOption} - $${getValidBetAmount().toFixed(
+          2
+        )}`
+      );
+      onClose();
       }, 1500);
     } catch (error) {
       console.error("Error submitting bet:", error);
@@ -245,13 +245,13 @@ export default function BettingModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-[400px] rounded-xl border border-gray-200 bg-white">
         {/* Close button */}
-        <button
-          onClick={onClose}
+          <button
+            onClick={onClose}
           className="absolute right-2 top-2 h-8 w-8 rounded-full bg-gray-100 p-0 flex items-center justify-center hover:bg-gray-200 transition-colors z-10"
           aria-label="Close"
-        >
+          >
           <X size={18} className="text-gray-500" />
-        </button>
+          </button>
 
         {/* Match header */}
         <div className="p-4 pt-6 flex flex-col items-center space-y-2 text-center">
@@ -262,46 +262,46 @@ export default function BettingModal({
                   minute: "2-digit",
                 })
               : "TBD"}
-          </div>
-          
+        </div>
+
           <div className="flex items-center justify-center space-x-8 mt-2">
             <div className="flex flex-col items-center space-y-2">
               <div className="w-14 h-14 relative">
-                <Image
-                  src={homeTeam.logo_url || "/placeholder.svg"}
-                  alt={homeTeam.name}
-                  fill
+                    <Image
+                      src={homeTeam.logo_url || "/placeholder.svg"}
+                      alt={homeTeam.name}
+                      fill
                   className="object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = "/placeholder.svg";
-                  }}
-                />
-              </div>
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
               <span className="text-sm font-medium text-gray-900">{homeTeam.name}</span>
-            </div>
-            
+                </div>
+
             <div className="text-lg text-gray-500 font-medium">VS</div>
-            
+
             <div className="flex flex-col items-center space-y-2">
               <div className="w-14 h-14 relative">
-                <Image
-                  src={awayTeam.logo_url || "/placeholder.svg"}
-                  alt={awayTeam.name}
-                  fill
+                    <Image
+                      src={awayTeam.logo_url || "/placeholder.svg"}
+                      alt={awayTeam.name}
+                      fill
                   className="object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = "/placeholder.svg";
-                  }}
-                />
-              </div>
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
               <span className="text-sm font-medium text-gray-900">{awayTeam.name}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Bet content */}
         <div className="p-5 space-y-6 border-t border-gray-200">
@@ -312,38 +312,38 @@ export default function BettingModal({
                 <span className="text-base font-semibold text-gray-900">{selected.type}</span>
                 <span className="text-base font-medium text-gray-700">{selected.team}</span>
                 <span className="text-base font-semibold text-blue-600">{selected.odds.toFixed(2)}</span>
+                  </div>
               </div>
             </div>
-          </div>
 
           {/* Amount input */}
           <div className="space-y-4">
             <div className="text-center mb-1">
               <span className="text-sm text-gray-500">Monto de apuesta</span>
-            </div>
-            
-            <div className="relative">
+              </div>
+
+                <div className="relative">
               <Input
                 id="amount"
-                type="text"
-                inputMode="decimal"
-                value={inputValue}
-                onChange={handleAmountChange}
-                onBlur={handleInputBlur}
-                onFocus={handleInputFocus}
+                        type="text"
+                        inputMode="decimal"
+                        value={inputValue}
+                        onChange={handleAmountChange}
+                        onBlur={handleInputBlur}
+                        onFocus={handleInputFocus}
                 className="text-center text-3xl font-semibold h-14 bg-gray-50 border-gray-200 focus-visible:ring-blue-500 rounded-xl"
-              />
+                      />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-xs font-bold text-white">USDC</span>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center px-1">
               <span className="text-sm text-gray-500">Potencial</span>
               <span className="text-xl font-semibold text-blue-600">${getPotentialWin()} USDC</span>
-            </div>
+              </div>
           </div>
 
           {/* Actions */}
@@ -378,7 +378,7 @@ export default function BettingModal({
               </Button>
             )}
           </div>
-        </div>
+          </div>
       </DialogContent>
     </Dialog>
   );
